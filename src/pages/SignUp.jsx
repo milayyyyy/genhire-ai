@@ -356,7 +356,7 @@ const SignUp = ({ onBackToLogin, onSignUpSuccess }) => {
         padding: 0
       }}>
         <img
-          src="https://images.pexels.com/photos/5439152/pexels-photo-5439152.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+          src="https://images.pexels.com/photos/4065137/pexels-photo-4065137.jpeg?auto=compress&cs=tinysrgb&w=1600"
           alt="Professional job interview"
           style={{
             width: '100%',
@@ -378,3 +378,4 @@ const SignUp = ({ onBackToLogin, onSignUpSuccess }) => {
 };
 
 export default SignUp;
+

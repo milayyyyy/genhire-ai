@@ -131,7 +131,7 @@ const ProfilePage = ({ onLogout }) => {
       <div style={{
         width: '280px',
         backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/12902862/pexels-photo-12902862.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")',
+        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
@@ -265,7 +265,7 @@ const ProfilePage = ({ onLogout }) => {
                 overflow: 'hidden'
               }}>
                 <img
-                  src="https://scontent.fceb2-1.fna.fbcdn.net/v/t39.30808-6/332894731_871500290627490_9114427192078729508_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEIQK4MFgnnRT9WfUg2B6s136FuOVzB0ezfoW45XMHR7GLHbu64z4xh439aJE-Nbc3U3zbd5CTvoo94jdtMy3N9&_nc_ohc=NcggS-PF0-YQ7kNvwEnFr6M&_nc_oc=AdmeDZmzyHsvb6r0FV2ZRFXlM9ivTKJ6uCa92aRo5yfmBZx-PSHmFy6Cy2WeumNPo3E&_nc_zt=23&_nc_ht=scontent.fceb2-1.fna&_nc_gid=YkQdYl3LxA2evXlqFcpT-A&oh=00_AfUgs_cUtw8mcGo5D5X2VU8M7Y4nPEiFGcH52XLOnN2pUg&oe=689D38F6"
+                  src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
                   alt="David Michael Osia"
                   style={{
                     width: '100%',
@@ -563,3 +563,4 @@ const ProfilePage = ({ onLogout }) => {
 };
 
 export default ProfilePage;
+

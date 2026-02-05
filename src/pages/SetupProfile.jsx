@@ -399,3 +399,4 @@ const SetupProfile = ({ onComplete, onSkip }) => {
 };
 
 export default SetupProfile;
+

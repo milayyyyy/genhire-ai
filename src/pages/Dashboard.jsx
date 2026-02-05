@@ -40,7 +40,7 @@ const Dashboard = ({ onLogout }) => {
       name: 'David Michael Osia',
       role: 'Admin',
       lastLogin: '1700, May 20, 2025',
-      avatar: 'https://scontent.fceb2-1.fna.fbcdn.net/v/t39.30808-6/332894731_871500290627490_9114427192078729508_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEIQK4MFgnnRT9WfUg2B6s136FuOVzB0ezfoW45XMHR7GLHbu64z4xh439aJE-Nbc3U3zbd5CTvoo94jdtMy3N9&_nc_ohc=NcggS-PF0-YQ7kNvwEnFr6M&_nc_oc=AdmeDZmzyHsvb6r0FV2ZRFXlM9ivTKJ6uCa92aRo5yfmBZx-PSHmFy6Cy2WeumNPo3E&_nc_zt=23&_nc_ht=scontent.fceb2-1.fna&_nc_gid=YkQdYl3LxA2evXlqFcpT-A&oh=00_AfUgs_cUtw8mcGo5D5X2VU8M7Y4nPEiFGcH52XLOnN2pUg&oe=689D38F6'
+      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
     {
       id: 3,
@@ -126,7 +126,7 @@ const Dashboard = ({ onLogout }) => {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
           }}>
             <img
-              src="https://scontent.fceb2-1.fna.fbcdn.net/v/t39.30808-6/332894731_871500290627490_9114427192078729508_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEIQK4MFgnnRT9WfUg2B6s136FuOVzB0ezfoW45XMHR7GLHbu64z4xh439aJE-Nbc3U3zbd5CTvoo94jdtMy3N9&_nc_ohc=NcggS-PF0-YQ7kNvwEnFr6M&_nc_oc=AdmeDZmzyHsvb6r0FV2ZRFXlM9ivTKJ6uCa92aRo5yfmBZx-PSHmFy6Cy2WeumNPo3E&_nc_zt=23&_nc_ht=scontent.fceb2-1.fna&_nc_gid=YkQdYl3LxA2evXlqFcpT-A&oh=00_AfUgs_cUtw8mcGo5D5X2VU8M7Y4nPEiFGcH52XLOnN2pUg&oe=689D38F6"
+              src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
               alt="David Michael Osia"
               style={{
                 width: '100%',
@@ -1572,7 +1572,7 @@ const Dashboard = ({ onLogout }) => {
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
             }}>
               <img
-                src="https://scontent.fceb2-1.fna.fbcdn.net/v/t39.30808-6/332894731_871500290627490_9114427192078729508_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEIQK4MFgnnRT9WfUg2B6s136FuOVzB0ezfoW45XMHR7GLHbu64z4xh439aJE-Nbc3U3zbd5CTvoo94jdtMy3N9&_nc_ohc=NcggS-PF0-YQ7kNvwEnFr6M&_nc_oc=AdmeDZmzyHsvb6r0FV2ZRFXlM9ivTKJ6uCa92aRo5yfmBZx-PSHmFy6Cy2WeumNPo3E&_nc_zt=23&_nc_ht=scontent.fceb2-1.fna&_nc_gid=YkQdYl3LxA2evXlqFcpT-A&oh=00_AfUgs_cUtw8mcGo5D5X2VU8M7Y4nPEiFGcH52XLOnN2pUg&oe=689D38F6"
+                src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
                 alt="David Michael Osia"
                 style={{
                   width: '40px',
@@ -2011,7 +2011,7 @@ const Dashboard = ({ onLogout }) => {
               marginBottom: '1rem'
             }}>
               <img
-                src="https://scontent.fceb2-1.fna.fbcdn.net/v/t39.30808-6/503328048_9758837597557203_6408118725456423310_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFEC8QlG5Txvi1hTt9IFxjK0HnCP1Ev5lbQecI_US_mVsrt8Fu8xdbYV4zph8Petgfv-v9y_ABabwhuJwgEwKnr&_nc_ohc=cKmOXoivHcgQ7kNvwGM9wPM&_nc_oc=AdnRkxgUWp6SCqFb98rfAQvtjgwXbqXqNM1j5HwsKUTKqW6SpEoDe2xx361lqeYWK5g&_nc_zt=23&_nc_ht=scontent.fceb2-1.fna&_nc_gid=Iji-OJyHFpgaIfPFVlia_Q&oh=00_AfX-0flOXUw7gkX9dtyMi0qBx6zJmtAd8ix_ZMCyGvplog&oe=689D630C"
+                src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
                 alt="Reggel Campanilla"
                 style={{
                   width: '32px',
@@ -2108,7 +2108,7 @@ const Dashboard = ({ onLogout }) => {
                 gap: '1rem'
               }}>
                 <img
-                  src="https://scontent.fceb2-1.fna.fbcdn.net/v/t39.30808-6/332894731_871500290627490_9114427192078729508_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEIQK4MFgnnRT9WfUg2B6s136FuOVzB0ezfoW45XMHR7GLHbu64z4xh439aJE-Nbc3U3zbd5CTvoo94jdtMy3N9&_nc_ohc=NcggS-PF0-YQ7kNvwEnFr6M&_nc_oc=AdmeDZmzyHsvb6r0FV2ZRFXlM9ivTKJ6uCa92aRo5yfmBZx-PSHmFy6Cy2WeumNPo3E&_nc_zt=23&_nc_ht=scontent.fceb2-1.fna&_nc_gid=YkQdYl3LxA2evXlqFcpT-A&oh=00_AfUgs_cUtw8mcGo5D5X2VU8M7Y4nPEiFGcH52XLOnN2pUg&oe=689D38F6"
+                  src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
                   alt="David Michael Osia"
                   style={{
                     width: '60px',
@@ -2686,7 +2686,7 @@ const Dashboard = ({ onLogout }) => {
       <div style={{
         width: '280px',
         backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/12902862/pexels-photo-12902862.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")',
+        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
@@ -2820,3 +2820,4 @@ const Dashboard = ({ onLogout }) => {
 };
 
 export default Dashboard;
+

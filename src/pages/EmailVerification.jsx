@@ -256,3 +256,4 @@ const EmailVerification = ({ onProceed, userEmail }) => {
 };
 
 export default EmailVerification;
+

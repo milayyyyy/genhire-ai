@@ -197,3 +197,4 @@ const AnalysisModal = ({ isOpen, onClose, analysis, category, question, allAnswe
 };
 
 export default AnalysisModal;
+

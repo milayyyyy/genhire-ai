@@ -221,3 +221,4 @@ const ForgotPassword = ({ onBackToLogin }) => {
 };
 
 export default ForgotPassword;
+

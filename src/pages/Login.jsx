@@ -305,7 +305,7 @@ const Login = ({ onForgotPassword, onSignUp }) => {
         padding: 0
       }}>
         <img
-          src="https://images.pexels.com/photos/5439152/pexels-photo-5439152.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+          src="https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=1600"
           alt="Professional job interview"
           style={{
             width: '100%',
@@ -327,3 +327,4 @@ const Login = ({ onForgotPassword, onSignUp }) => {
 };
 
 export default Login;
+

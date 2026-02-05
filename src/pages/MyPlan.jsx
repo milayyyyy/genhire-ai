@@ -64,7 +64,7 @@ const MyPlan = ({ onLogout }) => {
       <div style={{
         width: '280px',
         backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/12902862/pexels-photo-12902862.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")',
+        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
@@ -577,3 +577,4 @@ const MyPlan = ({ onLogout }) => {
 };
 
 export default MyPlan;
+

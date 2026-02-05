@@ -98,3 +98,4 @@ const ChatBubbleLogo = ({ size = 64 }) => {
 };
 
 export default ChatBubbleLogo;
+
