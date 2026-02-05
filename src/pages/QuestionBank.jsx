@@ -314,7 +314,7 @@ const QuestionBank = ({ onLogout }) => {
           flexDirection: 'column',
           height: '100%'
         }}>
-          {/* Logo Section - logo sa InterviewPro */}
+          {/* Logo Section - logo sa GenHire AI */}
           <div style={{
             padding: '2rem 1.5rem',
             borderBottom: '1px solid rgba(55, 65, 81, 0.5)'

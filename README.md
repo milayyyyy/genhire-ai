@@ -1,4 +1,4 @@
-# InterviewPro - AI Interview Practice Platform
+# GenHire AI - AI Interview Practice Platform
 
 A comprehensive React-based interview practice platform with AI-powered mock interviews, performance analysis, and personalized coaching.
 
@@ -112,7 +112,7 @@ This project is configured for easy Netlify deployment:
 
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Modern UI**: Clean, professional interface
-- **Consistent Branding**: InterviewPro design language throughout
+- **Consistent Branding**: GenHire AI design language throughout
 - **Interactive Elements**: Smooth animations and hover effects
 - **Accessibility**: Proper contrast ratios and semantic HTML
 
@@ -156,4 +156,4 @@ This project is a prototype for demonstration purposes.
 
 ---
 
-**InterviewPro** - Empowering your interview success with AI-powered practice and feedback.
+**GenHire AI** - Empowering your interview success with AI-powered practice and feedback.

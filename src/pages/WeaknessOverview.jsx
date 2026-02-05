@@ -158,8 +158,8 @@ const WeaknessOverview = ({ onLogout }) => {
         }}>
           {/*=================================================
              * LOGO SECTION
-             * Kani kay ang logo sa InterviewPro app nato
-             * Naa ni icon ug text na InterviewPro
+             * Kani kay ang logo sa GenHire AI app nato
+             * Naa ni icon ug text na GenHire AI
              *===============================================*/}
           <div style={{
             padding: '2rem 1.5rem',

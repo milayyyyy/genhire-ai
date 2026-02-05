@@ -1,10 +1,10 @@
-# Supabase Setup Guide for InterviewPro
+# Supabase Setup Guide for GenHire AI
 
 ## Step 1: Create Supabase Project
 
 1. Go to [Supabase Dashboard](https://app.supabase.com/)
 2. Click "New Project"
-3. Select an organization and enter project name: `interviewpro-ai`
+3. Select an organization and enter project name: `GenHire AI-ai`
 4. Set a strong database password
 5. Choose a region closest to your users
 6. Click "Create new project"
