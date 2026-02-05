@@ -26,6 +26,7 @@ const ProfilePage = ({ onLogout }) => {
   const [error, setError] = useState('');
 
   const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -162,6 +163,67 @@ const ProfilePage = ({ onLogout }) => {
     }
   };
 
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Check file size (optional, e.g., 2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('File size must be less than 2MB');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // 1. Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        if (uploadError.message.includes('bucket not found')) {
+            throw new Error('Supabase Storage bucket "avatars" not found. Please create it in your Supabase dashboard.');
+        }
+        throw uploadError;
+      }
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // 3. Update public.users table
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) {
+        // If the column doesn't exist, we'll try to update user_metadata instead as a fallback
+        const { error: metaError } = await supabase.auth.updateUser({
+          data: { avatar_url: publicUrl }
+        });
+        if (metaError) throw updateError;
+      }
+
+      setMessage('Photo updated successfully!');
+      // Refresh to get the latest profile
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError(err.message || 'Error uploading photo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNavigation = (itemId) => {
     switch (itemId) {
       case 'dashboard':
@@ -279,9 +341,14 @@ const ProfilePage = ({ onLogout }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              overflow: 'hidden'
             }}>
-              {user?.email?.charAt(0).toUpperCase() || 'U'}
+              {userProfile?.avatar_url ? (
+                <img src={userProfile.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                user?.email?.charAt(0).toUpperCase() || 'U'
+              )}
             </div>
           </div>
         </header>
@@ -304,6 +371,13 @@ const ProfilePage = ({ onLogout }) => {
             }}
           >
             <div style={{ position: 'relative' }}>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
               <div 
                 className="profile-image-container"
                 style={{
@@ -320,32 +394,52 @@ const ProfilePage = ({ onLogout }) => {
                   height: '100%',
                   borderRadius: '50%',
                   overflow: 'hidden',
-                  border: '4px solid #000'
+                  border: '4px solid #000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#111'
                 }}>
-                  <img
-                    src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
-                    alt="Profile"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                  {userProfile?.avatar_url ? (
+                    <img
+                      src={userProfile.avatar_url}
+                      alt="Profile"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <User size={80} color="#00c6ff" style={{ opacity: 0.8 }} />
+                  )}
                 </div>
               </div>
-              <button style={{
-                position: 'absolute',
-                bottom: 5,
-                right: 5,
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: '#00c6ff',
-                color: '#000',
-                border: '4px solid #000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
-              }}>
-                <Camera size={18} />
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                style={{
+                  position: 'absolute',
+                  bottom: 5,
+                  right: 5,
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: '#00c6ff',
+                  color: '#000',
+                  border: '4px solid #000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                  transition: 'all 0.2s',
+                  zIndex: 10
+                }}
+                onMouseOver={(e) => !loading && (e.currentTarget.style.transform = 'scale(1.1)')}
+                onMouseOut={(e) => !loading && (e.currentTarget.style.transform = 'scale(1)')}
+              >
+                {loading ? (
+                  <div style={{ width: '15px', height: '15px', border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                ) : (
+                  <Camera size={18} />
+                )}
               </button>
             </div>
 
