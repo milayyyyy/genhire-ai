@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Code, Globe, Database, Briefcase, Calculator, Heart, TrendingUp, HardDrive, Sparkles, ArrowRight, ArrowLeft, Search, ChevronRight, Cpu } from 'lucide-react';
+import { Code, Globe, Database, Briefcase, Calculator, Heart, TrendingUp, HardDrive, Sparkles, ArrowRight, ArrowLeft, Search, ChevronRight, Cpu, Store, Terminal, Users } from 'lucide-react';
 import { fetchJobCategories } from '../services/interviewService';
 
 const LiveAIInterviewContentPage = () => {
@@ -19,7 +19,10 @@ const LiveAIInterviewContentPage = () => {
     TrendingUp,
     HardDrive,
     Sparkles,
-    Cpu
+    Cpu,
+    Store,
+    Terminal,
+    Users
   };
 
   useEffect(() => {

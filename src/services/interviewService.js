@@ -1,10 +1,10 @@
 import { supabase } from '../../lib/supabase';
 
 const FALLBACK_CATEGORIES = [
-  { id: 1, title: 'Retail & Service', icon_name: 'Store', description: 'Real-world customer interaction and service scenarios' },
-  { id: 2, title: 'Technical & Web', icon_name: 'Terminal', description: 'Algorithm challenges and software engineering concepts' },
-  { id: 3, title: 'Management & Logic', icon_name: 'Briefcase', description: 'Leadership, problem-solving and people management' },
-  { id: 4, title: 'Corporate & HR', icon_name: 'Users', description: 'Professional office environment and human resources' }
+  { id: 1, title: 'Retail & Service', icon_name: 'Store', description: 'Real-world customer interaction and service scenarios', color: '#3b82f6', highlights: ['Customer Relations', 'Conflict Resolution', 'Inventory Management'] },
+  { id: 2, title: 'Technical & Web', icon_name: 'Terminal', description: 'Algorithm challenges and software engineering concepts', color: '#8b5cf6', highlights: ['Full-stack Concepts', 'System Architecture', 'Coding Logic'] },
+  { id: 3, title: 'Management & Logic', icon_name: 'Briefcase', description: 'Leadership, problem-solving and people management', color: '#10b981', highlights: ['Team Building', 'Decision Making', 'Resource Planning'] },
+  { id: 4, title: 'Corporate & HR', icon_name: 'Users', description: 'Professional office environment and human resources', color: '#f59e0b', highlights: ['Office Etiquette', 'Talent Retention', 'Corporate Policy'] }
 ];
 
 export const fetchJobCategories = async () => {
