@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -11,20 +11,88 @@ import {
   Star,
   MessageSquare,
   Lightbulb,
-  Download
+  Download,
+  CheckCircle2,
+  TrendingUp,
+  Award,
+  ArrowRight,
+  ShieldCheck,
+  ChevronRight
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
 import { analyzeAnswer } from '../services/aiAnalysisService';
 import jsPDF from 'jspdf';
+import { useAuth } from '../contexts/AuthContext';
 
 const InterviewResults = ({ onLogout }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [interviewData, setInterviewData] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState('');
   const [loading, setLoading] = useState(true);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     loadInterviewData();
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    const particles = [];
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        size: Math.random() * 2
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 198, 255, 0.4)';
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.08)';
+
+      particles.forEach((p, i) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dist = Math.sqrt((p.x - p2.x) ** 2 + (p.y - p2.y) ** 2);
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      });
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
   const loadInterviewData = async () => {
@@ -205,382 +273,342 @@ const InterviewResults = ({ onLogout }) => {
   }));
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>Loading...</div>;
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        height: '100vh',
+        background: '#000',
+        color: '#fff'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          border: '3px solid rgba(0, 198, 255, 0.1)',
+          borderTop: '3px solid #00c6ff',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '1rem'
+        }} />
+        <p style={{ fontSize: '0.9rem', color: '#64748b' }}>Analyzing Performance...</p>
+        <style>{`
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        `}</style>
+      </div>
+    );
   }
 
   return (
     <div style={{
       display: 'flex',
       height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      background: '#000',
+      color: '#fff',
+      fontFamily: "'Inter', sans-serif",
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      {/* Sidebar */}
-      <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        <div style={{
-          position: 'absolute',
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
-        
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
-        }}>
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
-            </div>
-          </div>
-
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'live-interview';
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 1,
+          opacity: 0.6
+        }}
+      />
       {/* Main Content */}
       <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
+        flex: 1,
         height: '100vh',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        color: 'white',
+        overflowY: 'auto',
         position: 'relative',
-        overflow: 'hidden'
+        zIndex: 2,
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        {/* Confetti */}
-        {confettiParticles.map((particle) => (
-          <div
-            key={particle.id}
-            style={{
-              position: 'absolute',
-              left: `${particle.left}%`,
-              top: '-10px',
-              width: particle.shape === 'triangle' ? '0' : '8px',
-              height: particle.shape === 'triangle' ? '0' : '8px',
-              backgroundColor: particle.shape === 'circle' ? '#fbbf24' : 'transparent',
-              borderRadius: particle.shape === 'circle' ? '50%' : '0',
-              borderLeft: particle.shape === 'triangle' ? '4px solid transparent' : 'none',
-              borderRight: particle.shape === 'triangle' ? '4px solid transparent' : 'none',
-              borderBottom: particle.shape === 'triangle' ? '8px solid #fbbf24' : 'none',
-              animation: `fall 3s linear infinite`,
-              animationDelay: `${particle.animationDelay}s`,
-              zIndex: 1
-            }}
-          />
-        ))}
-
-        {/* Score Display */}
-        <div style={{
-          flex: 1,
+        {/* Sticky Header */}
+        <header style={{
+          position: 'sticky',
+          top: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(12px)',
+          padding: '1.25rem 2rem',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
           display: 'flex',
-          flexDirection: 'column',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem',
-          textAlign: 'center',
-          position: 'relative',
-          zIndex: 2
+          zIndex: 100
         }}>
-          <div style={{
-            fontSize: '8rem',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            textShadow: '0 4px 8px rgba(0, 0, 0, 0.3)'
-          }}>
-            {score}
+          <div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Interview Analysis</h2>
+            <p style={{ fontSize: '0.825rem', color: '#94a3b8', margin: 0 }}>Performance breakdown and AI insights</p>
           </div>
-
-          <div style={{
-            width: '100px',
-            height: '4px',
-            backgroundColor: 'white',
-            marginBottom: '2rem',
-            borderRadius: '2px'
-          }}></div>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '1rem'
-          }}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                size={32}
-                fill={star <= score ? '#fbbf24' : 'transparent'}
-                color={star <= score ? '#fbbf24' : 'rgba(255, 255, 255, 0.3)'}
-              />
-            ))}
-          </div>
-
-          <h2 style={{
-            fontSize: '2rem',
-            fontWeight: '400',
-            margin: 0,
-            marginBottom: '2rem'
-          }}>
-            {score >= 4 ? 'Excellent' : score >= 3 ? 'Good' : 'Needs Improvement'}
-          </h2>
-        </div>
-
-        {/* Results Section */}
-        <div style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          padding: '2rem',
-          borderRadius: '24px 24px 0 0',
-          color: '#374151',
-          maxHeight: '60vh',
-          overflow: 'auto'
-        }}>
-          <div style={{
-            maxWidth: '800px',
-            margin: '0 auto'
-          }}>
-            {/* Export Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <button
               onClick={exportToPDF}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#06b6d4',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
+                padding: '0.6rem 1.25rem',
+                background: 'rgba(0, 198, 255, 0.1)',
+                border: '1px solid rgba(0, 198, 255, 0.2)',
+                borderRadius: '10px',
+                color: '#00c6ff',
                 cursor: 'pointer',
-                marginBottom: '2rem',
-                fontSize: '1rem',
-                fontWeight: '600'
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 198, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 198, 255, 0.1)';
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               <Download size={18} />
-              Export PDF Report
+              Export PDF
             </button>
-
-            {/* Questions and Answers */}
-            {interviewData?.qaList.map((qa, idx) => (
-              <div key={idx} style={{ marginBottom: '2rem' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  marginBottom: '1rem'
-                }}>
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    backgroundColor: '#06b6d4',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontWeight: 'bold'
-                  }}>
-                    {idx + 1}
-                  </div>
-                  <h3 style={{
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    margin: 0,
-                    color: '#374151'
-                  }}>
-                    Question {idx + 1}
-                  </h3>
-                </div>
-                
-                <div style={{
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  marginBottom: '0.75rem'
-                }}>
-                  <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.6' }}>
-                    {qa.question}
-                  </p>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  color: '#6b7280'
-                }}>
-                  Your Answer:
-                </div>
-
-                <div style={{
-                  backgroundColor: '#f0f9ff',
-                  border: '1px solid #bae6fd',
-                  borderRadius: '12px',
-                  padding: '1rem'
-                }}>
-                  <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.6', color: '#0c4a6e' }}>
-                    {qa.answer}
-                  </p>
-                </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              paddingLeft: '1rem',
+              borderLeft: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>{user?.displayName || 'User'}</div>
+                <div style={{ fontSize: '0.75rem', color: '#00c6ff' }}>Premium Member</div>
               </div>
-            ))}
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'linear-gradient(45deg, #00c6ff, #0072ff)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '0.9rem'
+              }}>
+                {user?.displayName?.[0] || 'U'}
+              </div>
+            </div>
+          </div>
+        </header>
 
-            {/* AI Analysis */}
-            <div style={{ marginTop: '2rem' }}>
+        <div style={{ padding: '2.5rem', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+          {/* Score Overview Card */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: '24px',
+            padding: '3rem 2rem',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            marginBottom: '2.5rem',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-100px',
+              right: '-100px',
+              width: '300px',
+              height: '300px',
+              background: 'radial-gradient(circle, rgba(0, 198, 255, 0.05) 0%, transparent 70%)',
+              pointerEvents: 'none'
+            }} />
+
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px' }}>Overall Performance Score</p>
+              <div style={{
+                fontSize: '7rem',
+                fontWeight: '900',
+                background: 'linear-gradient(to bottom, #fff, #94a3b8)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                lineHeight: 1,
+                marginBottom: '1rem'
+              }}>
+                {score}
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star
+                    key={s}
+                    size={28}
+                    fill={s <= score ? '#00c6ff' : 'transparent'}
+                    stroke={s <= score ? '#00c6ff' : 'rgba(255, 255, 255, 0.2)'}
+                    style={{ filter: s <= score ? 'drop-shadow(0 0 8px rgba(0, 198, 255, 0.5))' : 'none' }}
+                  />
+                ))}
+              </div>
+
+              <div style={{
+                display: 'inline-block',
+                padding: '0.5rem 1.5rem',
+                background: score >= 4 ? 'rgba(34, 197, 94, 0.1)' : score >= 3 ? 'rgba(0, 198, 255, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                border: `1px solid ${score >= 4 ? 'rgba(34, 197, 94, 0.2)' : score >= 3 ? 'rgba(0, 198, 255, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                borderRadius: '100px',
+                color: score >= 4 ? '#4ade80' : score >= 3 ? '#00c6ff' : '#f87171',
+                fontSize: '1rem',
+                fontWeight: '600'
+              }}>
+                {score >= 4 ? 'Exceptional Performance' : score >= 3 ? 'Strong Performance' : 'Growth Opportunities'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2.5rem' }}>
+            {/* AI Analysis Card */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '24px',
+              padding: '2.5rem',
+              border: '1px solid rgba(0, 198, 255, 0.1)',
+              position: 'relative'
+            }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '1rem'
+                gap: '1rem',
+                marginBottom: '1.5rem'
               }}>
                 <div style={{
-                  width: '32px',
-                  height: '32px',
-                  backgroundColor: '#fbbf24',
-                  borderRadius: '8px',
+                  width: '40px',
+                  height: '40px',
+                  background: 'rgba(0, 198, 255, 0.1)',
+                  borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  color: '#00c6ff'
                 }}>
-                  <Lightbulb size={18} color="white" />
+                  <Sparkles size={22} />
                 </div>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  margin: 0,
-                  color: '#374151'
-                }}>
-                  AI Analysis & Recommendations
-                </h3>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>AI Performance Insight</h3>
+                  <p style={{ fontSize: '0.825rem', color: '#94a3b8', margin: 0 }}>Nuanced feedback based on your responses</p>
+                </div>
               </div>
-              
+
               <div style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                fontSize: '1rem',
-                lineHeight: '1.6',
-                color: '#4b5563',
-                whiteSpace: 'pre-wrap'
+                fontSize: '1.05rem',
+                lineHeight: '1.8',
+                color: '#cbd5e1',
+                whiteSpace: 'pre-wrap',
+                fontWeight: '400'
               }}>
-                {aiAnalysis || 'Generating analysis...'}
+                {aiAnalysis || 'Synthesizing your interview data...'}
               </div>
             </div>
 
-            {/* Continue Button */}
+            {/* Questions Breakdown */}
+            <div style={{ marginTop: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+                <Clock size={24} style={{ color: '#00c6ff' }} />
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>Response Breakdown</h3>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {interviewData?.qaList.map((qa, idx) => (
+                  <div key={idx} style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '20px',
+                    padding: '2rem',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    <div style={{ display: 'flex', gap: '1.5rem' }}>
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#00c6ff',
+                        fontWeight: '700',
+                        fontSize: '0.9rem',
+                        flexShrink: 0
+                      }}>
+                        {idx + 1}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                          <h4 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: '0.75rem', fontWeight: '600' }}>Question</h4>
+                          <p style={{ color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>{qa.question}</p>
+                        </div>
+                        <div>
+                          <h4 style={{ fontSize: '1.1rem', color: '#00c6ff', marginBottom: '0.75rem', fontWeight: '600' }}>Your Response</h4>
+                          <div style={{
+                            background: 'rgba(0, 198, 255, 0.03)',
+                            padding: '1.25rem',
+                            borderRadius: '12px',
+                            borderLeft: '3px solid #00c6ff',
+                            color: '#e2e8f0',
+                            lineHeight: '1.7',
+                            fontSize: '1rem'
+                          }}>
+                            {qa.answer}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <button
               onClick={() => navigate('/user-dashboard')}
               style={{
                 width: '100%',
-                padding: '1rem 2rem',
-                backgroundColor: '#06b6d4',
+                padding: '1.25rem',
+                background: 'linear-gradient(45deg, #00c6ff, #0072ff)',
                 color: 'white',
                 border: 'none',
-                borderRadius: '12px',
-                fontSize: '1.125rem',
-                fontWeight: '600',
+                borderRadius: '16px',
+                fontSize: '1.1rem',
+                fontWeight: '700',
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)',
-                transition: 'all 0.2s',
-                marginTop: '2rem'
+                boxShadow: '0 8px 30px rgba(0, 198, 255, 0.2)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                marginTop: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.75rem'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 198, 255, 0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 198, 255, 0.2)';
               }}
             >
-              Continue to Dashboard
+              Return to Dashboard
+              <ArrowRight size={20} />
             </button>
           </div>
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fall {
-          0% {
-            transform: translateY(-10px) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(100vh) rotate(360deg);
-            opacity: 0;
-          }
-        }
-      `}} />
     </div>
   );
 };

@@ -2,7 +2,7 @@ import './globals.css'
 import { AuthProvider } from './contexts/AuthContext'
 
 export const metadata = {
-  title: 'InterviewPro - AI Interview Practice Platform',
+  title: 'GenHire AI - AI Interview Practice Platform',
   description: 'Master your interviews with AI-powered practice and feedback',
 }
 

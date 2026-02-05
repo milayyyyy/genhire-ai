@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -11,672 +11,358 @@ import {
   BarChart3,
   Calendar,
   MessageCircle,
-  Star
+  Star,
+  Bell
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchUserInterviews, fetchInterviewStats } from '../services/interviewService';
 
 const UserDashboard = ({ onLogout }) => {
   const navigate = useNavigate();
   const { user, userProfile } = useAuth();
+  const canvasRef = useRef(null);
+  const [interviews, setInterviews] = useState([]);
+  const [stats, setStats] = useState({ avgRating: '0.0', practiceSessions: '0', avgLength: '0s', streak: '0' });
+  const [loading, setLoading] = useState(true);
 
-  const handleNavigation = (itemId) => {
-    switch(itemId) {
-      case 'dashboard':
-        navigate('/user-dashboard');
-        break;
-      case 'live-interview':
-        navigate('/live-ai-interview-content-page');
-        break;
-      case 'past-interviews':
-        navigate('/weakness-overview');
-        break;
-      case 'question-bank':
-        navigate('/question-bank');
-        break;
-      case 'subscriptions':
-        navigate('/my-plan');
-        break;
-      case 'profile':
-        navigate('/profile');
-        break;
-      case 'settings':
-        navigate('/settings');
-        break;
-      default:
-        break;
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (user?.id) {
+        setLoading(true);
+        try {
+          const [interviewData, statsData] = await Promise.all([
+            fetchUserInterviews(user.id),
+            fetchInterviewStats(user.id)
+          ]);
+          setInterviews(interviewData);
+          setStats(statsData);
+        } catch (error) {
+          console.error("Error loading dashboard data:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
     }
-  };
-  const sidebarItems = [
-    { id: 'dashboard', icon: Home, label: 'Dashboard' },
-    { id: 'past-interviews', icon: Clock, label: 'Past Interviews' },
-    { id: 'live-interview', icon: Zap, label: 'Live AI Interview' },
-    { id: 'question-bank', icon: HelpCircle, label: 'Question Bank' },
-    { id: 'subscriptions', icon: CreditCard, label: 'Subscriptions' },
-    { id: 'profile', icon: User, label: 'Profile' },
-    { id: 'settings', icon: Settings, label: 'Settings' }
-  ];
+    loadDashboardData();
+  }, [user]);
+
+  useEffect(() => {
+    // Particle Animation - Same as Landing Page
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    const particles = [];
+    const particleCount = 100;
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.5,
+        speedY: (Math.random() - 0.5) * 0.5,
+        opacity: Math.random() * 0.3 + 0.1
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 120) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.1 * (1 - distance / 120)})`;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      particles.forEach(p => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+        
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 198, 255, ${p.opacity})`;
+        ctx.fill();
+      });
+      animationFrameId = requestAnimationFrame(animate);
+    }
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   return (
     <div style={{
       display: 'flex',
       height: '100vh',
       fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      backgroundColor: '#000',
+      position: 'relative',
+      color: '#fff'
     }}>
-      {/* Sidebar - nindot nga sidebar */}
+      {/* Background Elements - Unified with Landing Style */}
       <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
         left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        {/* Dark overlay for sidebar */}
-        <div style={{
+        width: '100%',
+        height: '100%',
+        backgroundImage: 'linear-gradient(rgba(0, 198, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 198, 255, 0.03) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+      <canvas
+        ref={canvasRef}
+        style={{
           position: 'absolute',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
-        
-        {/* Sidebar content wrapper */}
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0
+        }}
+      />
+
+      <style>{`
+        @keyframes shine {
+          to { background-position: 200% center; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* Main Content Area */}
+      <div style={{
+        flex: 1,
+        height: '100vh',
+        overflow: 'auto',
+        position: 'relative',
+        zIndex: 1,
+        padding: '0 2rem'
+      }}>
+        {/* Header Hook */}
         <div style={{
-          position: 'relative',
-          zIndex: 2,
           display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '2rem 0',
+          position: 'sticky',
+          top: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 5,
+          margin: '0 -2rem',
+          paddingLeft: '2rem',
+          paddingRight: '2rem',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.03)'
         }}>
-          {/* Logo Section - logo sa GenHire AI */}
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
+          <div>
+            <h1 style={{
+              fontSize: '1.75rem',
+              fontWeight: '800',
+              margin: 0,
+              letterSpacing: '-0.02em',
+              animation: 'fadeInUp 0.6s ease-out'
             }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
-            </div>
+              Welcome back, <span style={{ color: '#00c6ff' }}>{userProfile?.first_name || 'Innovator'}</span>
+            </h1>
           </div>
 
-          {/* Navigation - mga navigation items */}
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'dashboard'; // Dashboard is active by default
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content - main content area */}
-      <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
-        height: '100vh',
-        overflow: 'auto'
-      }}>
-        <div style={{
-          flex: 1,
-          backgroundColor: '#f9fafb',
-          minHeight: '100vh'
-        }}>
-          {/* Header Section with Greeting - header nga nindot */}
-          <div style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-            padding: '2rem',
-            color: 'white',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem'
+              padding: '0.6rem 1rem',
+              background: 'rgba(0, 198, 255, 0.1)',
+              border: '1px solid rgba(0, 198, 255, 0.2)',
+              borderRadius: '2rem',
+              fontSize: '0.85rem',
+              color: '#00c6ff',
+              fontWeight: '600'
             }}>
-              <img
-                src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="User Profile"
-                style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '3px solid rgba(255, 255, 255, 0.3)'
-                }}
-              />
-              <div>
-                <h1 style={{
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  margin: 0,
-                  marginBottom: '0.25rem'
-                }}>
-                  Good Day,
-                </h1>
-                <p style={{
-                  fontSize: '1.5rem',
-                  color: '#06b6d4',
-                  margin: 0,
-                  fontWeight: '500'
-                }}>
-                  {userProfile?.first_name || user?.email?.split('@')[0] || 'User'}!
-                </p>
-              </div>
+              Pro Plan
             </div>
-            
-            {/* Notification Bell - notification icon */}
-            <div style={{
-              width: '48px',
-              height: '48px',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
+            <button style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'rgba(255, 255, 255, 0.05)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              color: '#fff'
             }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-              </svg>
-            </div>
+              <Bell size={18} />
+            </button>
           </div>
+        </div>
 
-          {/* Main Content Area - main content diri */}
-          <div style={{ padding: '2rem' }}>
-            {/* Performance Snapshot Card - performance snapshot */}
+        <div style={{ padding: '2rem 0', animation: 'fadeInUp 0.8s ease-out' }}>
+          {/* Performance Snapshot */}
+          <section style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '1.5rem',
+            padding: '2rem',
+            marginBottom: '2rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+              <BarChart3 size={22} color="#00c6ff" />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Performance Stats</h2>
+            </div>
+
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '1.5rem'
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '1rem'
-              }}>
-                <BarChart3 size={24} color="#06b6d4" />
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#06b6d4',
-                  margin: 0
+              {[
+                { label: 'Avg Rating', value: stats.avgRating, icon: Star, color: '#facc15' },
+                { label: 'Practice Sessions', value: stats.practiceSessions, icon: Zap, color: '#00c6ff' },
+                { label: 'Avg Length', value: stats.avgLength, icon: Clock, color: '#4ade80' },
+                { label: 'Answer Streak', value: stats.streak, icon: MessageCircle, color: '#f87171' }
+              ].map((stat, i) => (
+                <div key={i} style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  padding: '1.5rem',
+                  borderRadius: '1rem',
+                  border: '1px solid rgba(255, 255, 255, 0.03)'
                 }}>
-                  Performance Snapshot
-                </h2>
-              </div>
-              
-              <p style={{
-                color: '#6b7280',
-                marginBottom: '2rem',
-                fontSize: '1rem'
-              }}>
-                You've completed 4 interviews this week. Keep going!
-              </p>
-
-              {/* Performance Stats Grid - mga stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '2rem'
-              }}>
-                {/* Left Column */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {/* Average Rating Card */}
-                  <div style={{
-                    backgroundColor: '#06b6d4',
-                    color: 'white',
-                    padding: '2rem',
-                    borderRadius: '12px',
-                    position: 'relative'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '1rem'
-                    }}>
-                      <Star size={20} fill="white" />
-                      <span style={{ fontSize: '0.875rem' }}>Average Rating</span>
-                    </div>
-                    <div style={{
-                      fontSize: '3rem',
-                      fontWeight: 'bold',
-                      marginBottom: '0.5rem'
-                    }}>
-                      4.3
-                    </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.85rem' }}>{stat.label}</span>
+                    <stat.icon size={16} color={stat.color} />
                   </div>
-
-                  {/* Best Answered Question */}
-                  <div style={{
-                    backgroundColor: '#f9fafb',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem'
-                    }}>
-                      <MessageCircle size={16} color="#374151" />
-                      <span style={{ fontSize: '0.875rem', color: '#374151', fontWeight: '500' }}>
-                        Best Answered Question
-                      </span>
-                    </div>
-                    <p style={{
-                      color: '#06b6d4',
-                      fontSize: '0.875rem',
-                      margin: 0
-                    }}>
-                      Tell me about yourself?
-                    </p>
-                  </div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: '700' }}>{stat.value}</div>
                 </div>
+              ))}
+            </div>
+          </section>
 
-                {/* Right Column */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {/* Best Score */}
-                  <div style={{
-                    backgroundColor: '#f9fafb',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb',
-                    textAlign: 'right'
-                  }}>
-                    <div style={{
+          {/* Quick Actions & Recent Sessions */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
+            {/* Recent Sessions */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.01)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '1.5rem',
+              padding: '2rem'
+            }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1.5rem' }}>Recent Interviews</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {loading ? (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading sessions...</div>
+                ) : interviews.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>No interview sessions yet.</div>
+                ) : (
+                  interviews.slice(0, 5).map((interview, i) => (
+                    <div key={interview.id} style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'flex-end',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem'
+                      padding: '1.25rem',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderRadius: '1rem',
+                      border: '1px solid rgba(255, 255, 255, 0.03)'
                     }}>
-                      <span style={{ fontSize: '0.875rem', color: '#374151', fontWeight: '500' }}>
-                        Best Score
-                      </span>
+                      <div style={{
+                        width: '48px', height: '48px',
+                        background: 'rgba(0, 198, 255, 0.1)',
+                        borderRadius: '12px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '1.25rem', fontWeight: '800', color: '#00c6ff',
+                        marginRight: '1.25rem'
+                      }}>
+                        {interviews.length - i}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 0.4rem 0', fontWeight: '600' }}>
+                          {interview.topic} ({interview.interviewType})
+                        </h4>
+                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <Calendar size={12} /> {new Date(interview.created_at).toLocaleDateString()}
+                          </span>
+                          <span style={{ color: '#facc15' }}>
+                            {'★'.repeat(Math.round(parseFloat(interview.overall_score || 0) / 20))}
+                            {'☆'.repeat(5 - Math.round(parseFloat(interview.overall_score || 0) / 20))}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{
-                      fontSize: '2rem',
-                      fontWeight: 'bold',
-                      color: '#06b6d4'
-                    }}>
-                      4
-                    </div>
-                  </div>
-
-                  {/* Last Practice Date */}
-                  <div style={{
-                    backgroundColor: '#f9fafb',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb',
-                    textAlign: 'right'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'flex-end',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem'
-                    }}>
-                      <Calendar size={16} color="#374151" />
-                      <span style={{ fontSize: '0.875rem', color: '#374151', fontWeight: '500' }}>
-                        Last Practice Date
-                      </span>
-                    </div>
-                    <p style={{
-                      color: '#06b6d4',
-                      fontSize: '0.875rem',
-                      margin: 0
-                    }}>
-                      Feb 14, 2025
-                    </p>
-                  </div>
-
-                  {/* Average Response Length */}
-                  <div style={{
-                    backgroundColor: '#f9fafb',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb',
-                    textAlign: 'right'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'flex-end',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem'
-                    }}>
-                      <Clock size={16} color="#374151" />
-                      <span style={{ fontSize: '0.875rem', color: '#374151', fontWeight: '500' }}>
-                        Average Response Length
-                      </span>
-                    </div>
-                    <p style={{
-                      color: '#06b6d4',
-                      fontSize: '0.875rem',
-                      margin: 0
-                    }}>
-                      48 seconds
-                    </p>
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
             </div>
 
-            {/* My Past Interviews Section - past interviews */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}>
+            {/* CTA Sidebar */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '0.5rem'
-              }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  backgroundColor: '#06b6d4',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                </div>
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#06b6d4',
-                  margin: 0
-                }}>
-                  My Past Interviews
-                </h2>
-              </div>
-              
-              <p style={{
-                color: '#6b7280',
-                marginBottom: '1.5rem',
-                fontSize: '0.875rem'
-              }}>
-                Review your previous interview sessions and identify areas for improvement based on past performance.
-              </p>
-
-              {/* Interview List - mga past interviews */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }}>
-                {/* Interview 1 - Situational Interview */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '1.25rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    backgroundColor: '#1e293b',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: '1.25rem',
-                    flexShrink: 0
-                  }}>
-                    <span style={{ color: 'white', fontSize: '2rem', fontWeight: 'bold' }}>4</span>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#3b82f6',
-                      margin: 0,
-                      marginBottom: '0.75rem'
-                    }}>
-                      Situational Interview Pract...
-                    </h3>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1.5rem',
-                      fontSize: '0.875rem',
-                      color: '#64748b'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <span style={{ color: '#fbbf24', fontSize: '1rem' }}>★★★★</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <Calendar size={14} />
-                        <span>Feb 3, 2024</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <HelpCircle size={14} />
-                        <span>4 Questions</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <span>✏️</span>
-                        <span>Situational</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interview 2 */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '1.25rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    backgroundColor: '#1e293b',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: '1.25rem',
-                    flexShrink: 0
-                  }}>
-                    <span style={{ color: 'white', fontSize: '2rem', fontWeight: 'bold' }}>4</span>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#3b82f6',
-                      margin: 0,
-                      marginBottom: '0.75rem'
-                    }}>
-                      Interview 2
-                    </h3>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1.5rem',
-                      fontSize: '0.875rem',
-                      color: '#64748b'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <span style={{ color: '#fbbf24', fontSize: '1rem' }}>★★★★</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <Calendar size={14} />
-                        <span>Feb 2, 2024</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <HelpCircle size={14} />
-                        <span>10 Questions</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <span>✏️</span>
-                        <span>Behavioral</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interview 3 */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '1.25rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    backgroundColor: '#1e293b',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: '1.25rem',
-                    flexShrink: 0
-                  }}>
-                    <span style={{ color: 'white', fontSize: '2rem', fontWeight: 'bold' }}>3</span>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#3b82f6',
-                      margin: 0,
-                      marginBottom: '0.75rem'
-                    }}>
-                      Soft Eng. Practice
-                    </h3>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1.5rem',
-                      fontSize: '0.875rem',
-                      color: '#64748b'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <span style={{ color: '#fbbf24', fontSize: '1rem' }}>★★★</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <Calendar size={14} />
-                        <span>Feb 1, 2024</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <HelpCircle size={14} />
-                        <span>15 Questions</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <span>✏️</span>
-                        <span>Full Interview</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                borderRadius: '1.5rem',
+                padding: '2rem',
+                color: '#fff',
+                position: 'relative',
+                overflow: 'hidden',
+                cursor: 'pointer'
+              }} onClick={() => navigate('/live-ai-interview')}>
+                <Zap size={48} style={{ position: 'absolute', right: '-10px', bottom: '-10px', opacity: 0.2 }} />
+                <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: '800', fontSize: '1.5rem' }}>Start Live AI</h3>
+                <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>Jump into a real-time voice interview now.</p>
               </div>
 
-              {/* Start Mock Interview Button - button para sa mock interview */}
-              <div style={{ marginTop: '2rem' }}>
-                <button 
-                  onClick={() => navigate('/live-ai-interview-content-page')}
-                  style={{
-                    width: '100%',
-                    padding: '1rem 2rem',
-                    backgroundColor: '#06b6d4',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'
-                  }}>
-                  <Zap size={20} />
-                  Start Mock Interview
-                </button>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '1.5rem',
+                padding: '1.5rem',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '1rem' }}>Learning Progress</div>
+                <div style={{ 
+                  height: '6px', 
+                  background: 'rgba(255, 255, 255, 0.1)', 
+                  borderRadius: '3px',
+                  position: 'relative'
+                }}>
+                  <div style={{ 
+                    position: 'absolute', left: 0, top: 0, height: '100%', width: '75%', 
+                    background: '#00c6ff', borderRadius: '3px',
+                    boxShadow: '0 0 10px rgba(0, 198, 255, 0.5)'
+                  }} />
+                </div>
+                <div style={{ marginTop: '0.75rem', fontSize: '1.25rem', fontWeight: '700' }}>75%</div>
               </div>
             </div>
           </div>

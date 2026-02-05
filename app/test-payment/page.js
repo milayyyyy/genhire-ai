@@ -27,7 +27,7 @@ export default function TestPayment() {
         },
         body: JSON.stringify({
           amount: price,
-          description: `Test - InterviewPro ${period}`,
+          description: `Test - GenHire AI ${period}`,
           plan: plan,
           period: period,
           userId: user.uid

@@ -43,7 +43,7 @@ export default function Pricing() {
         },
         body: JSON.stringify({
           amount: price,
-          description: `InterviewPro ${period === 'monthly' ? 'Monthly' : 'Yearly'} Subscription`,
+          description: `GenHire AI ${period === 'monthly' ? 'Monthly' : 'Yearly'} Subscription`,
           plan: plan,
           period: period,
           userId: user.uid
@@ -657,7 +657,7 @@ export default function Pricing() {
             <input type="checkbox" id="terms" />
             <label htmlFor="terms">
               By checking this box, you acknowledge that you have read, understood, and agree to the{' '}
-              <a href="#" className="terms-link" onClick={openTermsModal}>InterviewPro Terms and Conditions</a>, including the subscription, billing, and cancellation policies.
+              <a href="#" className="terms-link" onClick={openTermsModal}>GenHire AI Terms and Conditions</a>, including the subscription, billing, and cancellation policies.
             </label>
           </div>
 
@@ -674,7 +674,7 @@ export default function Pricing() {
           <div className="modal-overlay" onClick={closeTermsModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h2 className="modal-title">InterviewPro Terms and Conditions</h2>
+                <h2 className="modal-title">GenHire AI Terms and Conditions</h2>
                 <button className="modal-close" onClick={closeTermsModal}>
                   ×
                 </button>
@@ -682,12 +682,12 @@ export default function Pricing() {
               <div className="modal-body">
                 <div className="modal-section">
                   <p><strong>Last Updated:</strong> January 2025</p>
-                  <p>Welcome to InterviewPro. These Terms and Conditions ("Terms") govern your use of our interview preparation platform and services.</p>
+                  <p>Welcome to GenHire AI. These Terms and Conditions ("Terms") govern your use of our interview preparation platform and services.</p>
                 </div>
 
                 <div className="modal-section">
                   <h3>1. Service Description</h3>
-                  <p>InterviewPro provides AI-powered interview preparation services including:</p>
+                  <p>GenHire AI provides AI-powered interview preparation services including:</p>
                   <ul>
                     <li>Mock interview sessions with AI feedback</li>
                     <li>Question bank access for practice</li>
@@ -746,7 +746,7 @@ export default function Pricing() {
 
                 <div className="modal-section">
                   <h3>7. Limitation of Liability</h3>
-                  <p>InterviewPro is provided "as is" without warranties. We are not liable for:</p>
+                  <p>GenHire AI is provided "as is" without warranties. We are not liable for:</p>
                   <ul>
                     <li>Interview outcomes or job placement results</li>
                     <li>Technical issues or service interruptions</li>
@@ -763,7 +763,7 @@ export default function Pricing() {
                 </div>
 
                 <div className="modal-section">
-                  <p><em>By using InterviewPro, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.</em></p>
+                  <p><em>By using GenHire AI, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.</em></p>
                 </div>
               </div>
             </div>

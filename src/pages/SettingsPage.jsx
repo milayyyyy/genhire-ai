@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Home,
   Clock,
@@ -9,19 +10,106 @@ import {
   User,
   Settings,
   ChevronRight,
-  Info
+  Info,
+  Bell,
+  Check,
+  Moon,
+  Sun,
+  Layout,
+  MessageSquare,
+  Volume2,
+  RefreshCw,
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
 
 const SettingsPage = ({ onLogout }) => {
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(false);
+  const { user } = useAuth();
+  const canvasRef = useRef(null);
+
+  const [darkMode, setDarkMode] = useState(true);
   const [buttonlessResponse, setButtonlessResponse] = useState(true);
   const [aiTextCaptions, setAiTextCaptions] = useState(true);
   const [autoPlayQuestions, setAutoPlayQuestions] = useState(true);
   const [speakingSpeed, setSpeakingSpeed] = useState('Normal');
   const [instantRating, setInstantRating] = useState(true);
   const [retryAnswer, setRetryAnswer] = useState(true);
+
+  // Particle Animation Logic
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 1.5;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.5)';
+        ctx.fill();
+      }
+    }
+
+    const init = () => {
+      resize();
+      particles = Array.from({ length: 80 }, () => new Particle());
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+        particles.slice(i + 1).forEach(p2 => {
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.15 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        });
+      });
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    window.addEventListener('resize', resize);
+    init();
+    animate();
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   const handleNavigation = (itemId) => {
     switch (itemId) {
@@ -65,26 +153,27 @@ const SettingsPage = ({ onLogout }) => {
     <div
       onClick={onToggle}
       style={{
-        width: '48px',
-        height: '24px',
-        backgroundColor: enabled ? '#06b6d4' : '#d1d5db',
-        borderRadius: '12px',
+        width: '44px',
+        height: '22px',
+        backgroundColor: enabled ? '#00c6ff' : 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '20px',
         position: 'relative',
         cursor: 'pointer',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        border: enabled ? 'none' : '1px solid rgba(255, 255, 255, 0.1)'
       }}
     >
       <div
         style={{
-          width: '20px',
-          height: '20px',
-          backgroundColor: 'white',
+          width: '18px',
+          height: '18px',
+          backgroundColor: '#fff',
           borderRadius: '50%',
           position: 'absolute',
-          top: '2px',
-          left: enabled ? '26px' : '2px',
-          transition: 'all 0.3s ease',
-          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+          top: enabled ? '2px' : '1px',
+          left: enabled ? '24px' : '2px',
+          transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+          boxShadow: enabled ? '0 0 10px rgba(0, 198, 255, 0.5)' : 'none'
         }}
       />
     </div>
@@ -94,275 +183,132 @@ const SettingsPage = ({ onLogout }) => {
     <div style={{
       display: 'flex',
       height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      fontFamily: "'Inter', sans-serif",
+      backgroundColor: '#000',
+      color: '#fff',
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      {/* Sidebar - nindot nga sidebar */}
-      <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        {/* Dark overlay for sidebar */}
-        <div style={{
-          position: 'absolute',
+      {/* Dynamic Background Canvas */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
-
-        {/* Sidebar content wrapper */}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
-        }}>
-          {/* Logo Section - logo sa GenHire AI */}
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
-            </div>
-          </div>
-
-          {/* Navigation - mga navigation items */}
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'settings'; // Settings is active
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content - settings interface */}
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.6
+        }}
+      />
+      {/* Main Content */}
       <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
+        flex: 1,
         height: '100vh',
-        overflow: 'auto'
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div style={{
-          flex: 1,
-          backgroundColor: '#f9fafb',
-          minHeight: '100vh'
+        {/* Header */}
+        <header style={{
+          position: 'sticky',
+          top: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(15px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          padding: '1.25rem 2.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 50
         }}>
-          {/* Header Section */}
-          <div style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-            position: 'relative',
-            paddingTop: '2rem',
-            paddingBottom: '3rem',
-            color: 'white',
-            textAlign: 'center'
-          }}>
-
-
-            {/* Header content */}
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>System Settings</h1>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Configure your AI interview environment</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ position: 'relative', cursor: 'pointer' }}>
+              <Bell size={20} color="#94a3b8" />
+              <span style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                width: '8px',
+                height: '8px',
+                background: '#00c6ff',
+                borderRadius: '50%',
+                border: '2px solid #000'
+              }}></span>
+            </div>
             <div style={{
-              position: 'relative',
-              zIndex: 2,
-              maxWidth: '800px',
-              margin: '0 auto',
-              padding: '0 2rem',
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
               display: 'flex',
               alignItems: 'center',
-              gap: '2rem'
+              justifyContent: 'center',
+              fontWeight: 'bold'
             }}>
-              {/* Settings Icon */}
-              <div style={{
-                flexShrink: 0
-              }}>
-                <img
-                  src="https://cdn-icons-png.flaticon.com/512/214/214342.png"
-                  alt="Settings Icon"
-                  style={{
-                    width: '120px',
-                    height: '120px',
-                    objectFit: 'contain'
-                  }}
-                />
-              </div>
-
-              {/* Text content */}
-              <div style={{ textAlign: 'left' }}>
-                <h1 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  margin: 0,
-                  marginBottom: '0.75rem'
-                }}>
-                  Settings
-                </h1>
-
-                <p style={{
-                  fontSize: '1.125rem',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: 0,
-                  lineHeight: '1.5'
-                }}>
-                  Customize your GenHire AI experience. Manage your preferences, and app settings—all in one place.
-                </p>
-              </div>
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
           </div>
+        </header>
 
-          {/* Content Area */}
-          <div style={{
-            maxWidth: '1000px',
-            margin: '0 auto',
-            padding: '2rem',
-            marginTop: '2rem',
-            position: 'relative',
-            zIndex: 3
-          }}>
-            {/* App Theme Section */}
+        <div style={{ padding: '2.5rem', maxWidth: '900px', margin: '0 auto' }}>
+          {/* App Appearance */}
+          <section style={{ marginBottom: '3rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <Layout size={20} color="#00c6ff" />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Appearance</h2>
+            </div>
+            
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem'
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '20px',
+              padding: '1.5rem'
             }}>
-              <h2 style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: '#06b6d4',
-                margin: 0,
-                marginBottom: '1.5rem'
-              }}>
-                App Theme
-              </h2>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '1rem 0'
-              }}>
-                <span style={{
-                  fontSize: '1rem',
-                  color: '#374151',
-                  fontWeight: '500'
-                }}>
-                  Enable dark mode
-                </span>
-                <ToggleSwitch
-                  enabled={darkMode}
-                  onToggle={() => setDarkMode(!darkMode)}
-                />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 0.25rem 0' }}>Dark Mode</h3>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>High contrast dark theme for better focus</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <Sun size={18} color="#64748b" />
+                  <ToggleSwitch enabled={darkMode} onToggle={() => setDarkMode(!darkMode)} />
+                  <Moon size={18} color="#00c6ff" />
+                </div>
               </div>
             </div>
+          </section>
 
-            {/* Interview Customizations Section */}
+          {/* Interview Engine */}
+          <section style={{ marginBottom: '3rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <Zap size={20} color="#00c6ff" />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Interview Engine</h2>
+            </div>
+            
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '24px',
               padding: '2rem',
-              marginBottom: '2rem'
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.5rem'
             }}>
-              <h2 style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: '#06b6d4',
-                margin: 0,
-                marginBottom: '1.5rem'
-              }}>
-                Interview Customizations
-              </h2>
-
-              {/* Turn on Button-less Response */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                padding: '1rem 0',
-                borderBottom: '1px solid #f3f4f6'
-              }}>
-                <div style={{ flex: 1, marginRight: '1rem' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{
-                      fontSize: '1rem',
-                      color: '#374151',
-                      fontWeight: '500'
-                    }}>
-                      Turn on Button-less Response
-                    </span>
-                    <Info size={16} color="#06b6d4" />
+              {/* Button-less Response */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1, marginRight: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Hands-free Mode</h3>
+                    <Info size={14} color="#00c6ff" />
                   </div>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    margin: 0,
-                    lineHeight: '1.4'
-                  }}>
-                    When enabled, the user no longer needs to tap the microphone button to respond. This system will automatically detect speech and begin recording as soon as the user starts speaking.
-                  </p>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Automatically detect speech without tapping the mic</p>
                 </div>
                 <ToggleSwitch
                   enabled={buttonlessResponse}
@@ -370,38 +316,14 @@ const SettingsPage = ({ onLogout }) => {
                 />
               </div>
 
-              {/* Turn off AI Interviewer Text Captions */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                padding: '1rem 0',
-                borderBottom: '1px solid #f3f4f6'
-              }}>
-                <div style={{ flex: 1, marginRight: '1rem' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{
-                      fontSize: '1rem',
-                      color: '#374151',
-                      fontWeight: '500'
-                    }}>
-                      Turn off AI Interviewer Text Captions
-                    </span>
-                    <Info size={16} color="#06b6d4" />
+              {/* Text Captions */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1, marginRight: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Hide Text Captions</h3>
+                    <Info size={14} color="#00c6ff" />
                   </div>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    margin: 0,
-                    lineHeight: '1.4'
-                  }}>
-                    When enabled, the questions will not be displayed as text on the screen. This setting is useful for users who want to simulate a real-life interview experience, relying only on the AI's voice without reading the text.
-                  </p>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Rely only on AI voice for a realistic challenge</p>
                 </div>
                 <ToggleSwitch
                   enabled={aiTextCaptions}
@@ -409,38 +331,14 @@ const SettingsPage = ({ onLogout }) => {
                 />
               </div>
 
-              {/* Auto-Play Interviewer Questions */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                padding: '1rem 0',
-                borderBottom: '1px solid #f3f4f6'
-              }}>
-                <div style={{ flex: 1, marginRight: '1rem' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{
-                      fontSize: '1rem',
-                      color: '#374151',
-                      fontWeight: '500'
-                    }}>
-                      Auto-Play Interviewer Questions
-                    </span>
-                    <Info size={16} color="#06b6d4" />
+              {/* Auto-Play */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1, marginRight: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Auto-advance Questions</h3>
+                    <Info size={14} color="#00c6ff" />
                   </div>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    margin: 0,
-                    lineHeight: '1.4'
-                  }}>
-                    When enabled, the AI will automatically start speaking the next question without requiring user to press "Next Question" button.
-                  </p>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>AI proceeds to the next question automatically</p>
                 </div>
                 <ToggleSwitch
                   enabled={autoPlayQuestions}
@@ -448,37 +346,27 @@ const SettingsPage = ({ onLogout }) => {
                 />
               </div>
 
-              {/* Adjust AI Speaking Speed */}
-              <div style={{
-                padding: '1rem 0',
-                borderBottom: '1px solid #f3f4f6'
-              }}>
-                <span style={{
-                  fontSize: '1rem',
-                  color: '#374151',
-                  fontWeight: '500',
-                  display: 'block',
-                  marginBottom: '1rem'
-                }}>
-                  Adjust AI Speaking Speed
+              {/* Speaking Speed */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#e2e8f0', display: 'block', marginBottom: '1rem' }}>
+                  AI Speaking Speed
                 </span>
-                <div style={{
-                  display: 'flex',
-                  gap: '0.5rem'
-                }}>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
                   {['Slow', 'Normal', 'Fast'].map((speed) => (
                     <button
                       key={speed}
                       onClick={() => setSpeakingSpeed(speed)}
                       style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: speakingSpeed === speed ? '#06b6d4' : 'white',
-                        color: speakingSpeed === speed ? 'white' : '#6b7280',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '20px',
+                        padding: '0.6rem 1.25rem',
+                        backgroundColor: speakingSpeed === speed ? 'rgba(0, 198, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                        color: speakingSpeed === speed ? '#00c6ff' : '#64748b',
+                        border: speakingSpeed === speed ? '1px solid #00c6ff' : '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
                         fontSize: '0.875rem',
+                        fontWeight: '600',
                         cursor: 'pointer',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
+                        flex: 1
                       }}
                     >
                       {speed}
@@ -486,39 +374,30 @@ const SettingsPage = ({ onLogout }) => {
                   ))}
                 </div>
               </div>
+            </div>
+          </section>
 
-              {/* Enable Instant AI Rating */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                padding: '1rem 0',
-                borderBottom: '1px solid #f3f4f6'
-              }}>
-                <div style={{ flex: 1, marginRight: '1rem' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{
-                      fontSize: '1rem',
-                      color: '#374151',
-                      fontWeight: '500'
-                    }}>
-                      Enable Instant AI Rating
-                    </span>
-                    <Info size={16} color="#06b6d4" />
-                  </div>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    margin: 0,
-                    lineHeight: '1.4'
-                  }}>
-                    When enabled, the AI interviewer will immediately rate the user's response after each question, providing a score and brief feedback before moving to the next question. Disabling this feature will only show ratings at the end of the interview.
-                  </p>
+          {/* Evaluation & Feedback */}
+          <section style={{ marginBottom: '3rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <ShieldCheck size={20} color="#00c6ff" />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Evaluation Systems</h2>
+            </div>
+            
+            <div style={{
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '24px',
+              padding: '2rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.5rem'
+            }}>
+              {/* Instant Rating */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1, marginRight: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 0.25rem 0' }}>Real-time Analysis</h3>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Show scoring results immediately after each answer</p>
                 </div>
                 <ToggleSwitch
                   enabled={instantRating}
@@ -526,37 +405,11 @@ const SettingsPage = ({ onLogout }) => {
                 />
               </div>
 
-              {/* Enable Retry Answer Option */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                padding: '1rem 0'
-              }}>
-                <div style={{ flex: 1, marginRight: '1rem' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{
-                      fontSize: '1rem',
-                      color: '#374151',
-                      fontWeight: '500'
-                    }}>
-                      Enable Retry Answer Option
-                    </span>
-                    <Info size={16} color="#06b6d4" />
-                  </div>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    margin: 0,
-                    lineHeight: '1.4'
-                  }}>
-                    When enabled, Users can redo their response for a question before moving to the next one.
-                  </p>
+              {/* Retry Answer */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1, marginRight: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 0.25rem 0' }}>Answer Revision</h3>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Allows you to retake an answer before proceeding</p>
                 </div>
                 <ToggleSwitch
                   enabled={retryAnswer}
@@ -564,88 +417,85 @@ const SettingsPage = ({ onLogout }) => {
                 />
               </div>
             </div>
+          </section>
 
-            {/* Additional Options */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
-              {/* Frequently Asked Questions */}
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem'
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    backgroundColor: '#06b6d4',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <HelpCircle size={20} color="white" />
-                  </div>
-                  <span style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: '#374151'
-                  }}>
-                    Frequently Asked Questions
-                  </span>
-                </div>
-                <ChevronRight size={20} color="#9ca3af" />
-              </div>
-
-              {/* App Information */}
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem'
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    backgroundColor: '#06b6d4',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Info size={20} color="white" />
-                  </div>
-                  <span style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: '#374151'
-                  }}>
-                    App Information
-                  </span>
-                </div>
-                <ChevronRight size={20} color="#9ca3af" />
-              </div>
+          {/* Support & Information */}
+          <section style={{ marginBottom: '3rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <HelpCircle size={20} color="#00c6ff" />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Support</h2>
             </div>
-          </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              {[
+                { label: 'Help Center', icon: HelpCircle, path: '/faq' },
+                { label: 'App Status', icon: Info, status: 'v2.1.0' }
+              ].map((item, idx) => (
+                <div 
+                  key={idx}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '16px',
+                    padding: '1.25rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 198, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <item.icon size={18} color="#00c6ff" />
+                    <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{item.label}</span>
+                  </div>
+                  {item.status ? (
+                    <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{item.status}</span>
+                  ) : (
+                    <ChevronRight size={16} color="#64748b" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Danger Zone */}
+          <section>
+            <div style={{
+              background: 'rgba(220, 38, 38, 0.05)',
+              border: '1px solid rgba(220, 38, 38, 0.2)',
+              borderRadius: '20px',
+              padding: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#ef4444', margin: '0 0 0.25rem 0' }}>Danger Zone</h3>
+                <p style={{ fontSize: '0.875rem', color: '#b91c1c', margin: 0 }}>Permanently delete your profile and interview data</p>
+              </div>
+              <button style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: 'transparent',
+                border: '1px solid #dc2626',
+                borderRadius: '12px',
+                color: '#dc2626',
+                fontSize: '0.875rem',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}>
+                Delete Account
+              </button>
+            </div>
+          </section>
         </div>
       </div>
     </div>

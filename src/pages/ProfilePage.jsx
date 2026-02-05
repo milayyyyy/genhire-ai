@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -8,7 +8,11 @@ import {
   CreditCard,
   User,
   Settings,
-  Mail
+  Mail,
+  Camera,
+  Bell,
+  MapPin,
+  Phone
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +24,89 @@ const ProfilePage = ({ onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let particles = [];
+    const particleCount = 40;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 2;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.4)';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.1 * (1 - dist / 150)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -124,440 +211,434 @@ const ProfilePage = ({ onLogout }) => {
     <div style={{
       display: 'flex',
       height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      fontFamily: "'Inter', sans-serif",
+      backgroundColor: '#000',
+      color: '#fff',
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      {/* Sidebar - nindot nga sidebar */}
-      <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        {/* Dark overlay for sidebar */}
-        <div style={{
-          position: 'absolute',
+      {/* Dynamic Background */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.6
+        }}
+      />
 
-        {/* Sidebar content wrapper */}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
+      {/* Content Area */}
+      <div style={{
+        flex: 1,
+        height: '100vh',
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        {/* Sticky Header */}
+        <header style={{
+          position: 'sticky',
+          top: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(15px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          padding: '1.25rem 2.5rem',
           display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 50
         }}>
-          {/* Logo Section - logo sa GenHire AI */}
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>My Profile</h1>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Manage your personal informational and security</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ position: 'relative', cursor: 'pointer' }}>
+              <Bell size={20} color="#94a3b8" />
+              <span style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                width: '8px',
+                height: '8px',
+                background: '#00c6ff',
+                borderRadius: '50%',
+                border: '2px solid #000'
+              }}></span>
+            </div>
             <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.75rem'
+              justifyContent: 'center',
+              fontWeight: 'bold'
             }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
           </div>
+        </header>
 
-          {/* Navigation - mga navigation items */}
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'profile'; // Profile is active
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content - profile interface */}
-      <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
-        height: '100vh',
-        overflow: 'auto'
-      }}>
-        <div style={{
-          flex: 1,
-          backgroundColor: '#f9fafb',
-          minHeight: '100vh'
-        }}>
-          {/* Header Section */}
-          <div style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
+        <div style={{ padding: '3rem', maxWidth: '1000px', margin: '0 auto' }}>
+          {/* Profile Hero Section */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '3rem', 
+            marginBottom: '4rem',
+            background: 'rgba(15, 15, 15, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '32px',
+            padding: '3rem',
             position: 'relative',
-            paddingTop: '1rem',
-            paddingBottom: '1rem',
-            color: 'white',
-            textAlign: 'center'
+            overflow: 'hidden'
           }}>
-            {/* Header content */}
-            <div style={{
-              position: 'relative',
-              zIndex: 2,
-              maxWidth: '800px',
-              margin: '0 auto',
-              padding: '0 2rem'
-            }}>
-              {/* Profile Picture */}
+            <div style={{ position: 'relative' }}>
               <div style={{
-                width: '120px',
-                height: '120px',
+                width: '160px',
+                height: '160px',
                 borderRadius: '50%',
-                margin: '0 auto 1.5rem',
-                border: '4px solid rgba(255, 255, 255, 0.3)',
-                overflow: 'hidden'
+                background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                padding: '4px',
+                boxShadow: '0 0 30px rgba(0, 198, 255, 0.3)'
               }}>
-                <img
-                  src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="David Michael Osia"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '4px solid #000'
+                }}>
+                  <img
+                    src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400"
+                    alt="Profile"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
               </div>
-
-              {/* Name and Email */}
-              <h1 style={{
-                fontSize: '2rem',
-                fontWeight: 'bold',
-                margin: 0,
-                marginBottom: '0.5rem'
-              }}>
-                David Michael Osia
-              </h1>
-
-              <div style={{
+              <button style={{
+                position: 'absolute',
+                bottom: 5,
+                right: 5,
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: '#00c6ff',
+                color: '#000',
+                border: '4px solid #000',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '0.5rem',
-                marginBottom: '2rem'
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
               }}>
-                <Mail size={16} />
-                <span style={{
-                  fontSize: '1rem',
-                  color: 'rgba(255, 255, 255, 0.9)'
-                }}>
-                  DavidMichaelOsia@gmail.com
-                </span>
+                <Camera size={18} />
+              </button>
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '800', margin: '0 0 0.5rem 0', letterSpacing: '-0.025em' }}>
+                {formData.firstName ? `${formData.firstName} ${formData.lastName}` : 'Candidate Name'}
+              </h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', color: '#94a3b8' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Mail size={16} color="#00c6ff" />
+                  <span>{formData.email}</span>
+                </div>
+                {formData.address && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <MapPin size={16} color="#00c6ff" />
+                    <span>{formData.address}</span>
+                  </div>
+                )}
+                {formData.phoneNumber && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Phone size={16} color="#00c6ff" />
+                    <span>{formData.phoneNumber}</span>
+                  </div>
+                )}
               </div>
 
-              {/* Stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '2rem',
-                maxWidth: '400px',
-                margin: '0 auto'
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    marginBottom: '0.25rem'
-                  }}>
-                    3
-                  </div>
-                  <div style={{
-                    fontSize: '0.875rem',
-                    color: 'rgba(255, 255, 255, 0.8)'
-                  }}>
-                    Total Interviews Taken
-                  </div>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                <div style={{ 
+                  background: 'rgba(255,255,255,0.03)', 
+                  padding: '1rem 1.5rem', 
+                  borderRadius: '20px', 
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  textAlign: 'center',
+                  minWidth: '120px'
+                }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#00c6ff' }}>12</div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>In-depth Interviews</div>
                 </div>
-
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    marginBottom: '0.25rem'
-                  }}>
-                    4
-                  </div>
-                  <div style={{
-                    fontSize: '0.875rem',
-                    color: 'rgba(255, 255, 255, 0.8)'
-                  }}>
-                    Best Interview Rating
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    marginBottom: '0.25rem'
-                  }}>
-                    4.3
-                  </div>
-                  <div style={{
-                    fontSize: '0.875rem',
-                    color: 'rgba(255, 255, 255, 0.8)'
-                  }}>
-                    Average Interview Rating
-                  </div>
+                <div style={{ 
+                  background: 'rgba(255,255,255,0.03)', 
+                  padding: '1rem 1.5rem', 
+                  borderRadius: '20px', 
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  textAlign: 'center',
+                  minWidth: '120px'
+                }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#00c6ff' }}>78%</div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg. Performance</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Form Section */}
-          <div style={{
-            maxWidth: '800px',
-            margin: '0 auto',
-            padding: '2rem',
-            marginTop: '2rem',
-            position: 'relative',
-            zIndex: 3
-          }}>
+          {/* Settings Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2.5rem' }}>
+            {/* Main Information */}
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem'
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '24px',
+              padding: '2.5rem'
             }}>
-              {/* Form Fields */}
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '6px', height: '18px', background: '#00c6ff', borderRadius: '3px' }}></div>
+                Personal Details
+              </h3>
+
               {message && (
-                <div style={{ padding: '0.75rem', backgroundColor: '#ecfdf5', color: '#059669', borderRadius: '8px', marginBottom: '1.5rem', textAlign: 'center' }}>
+                <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                   {message}
                 </div>
               )}
               {error && (
-                <div style={{ padding: '0.75rem', backgroundColor: '#fef2f2', color: '#dc2626', borderRadius: '8px', marginBottom: '1.5rem', textAlign: 'center' }}>
+                <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                   {error}
                 </div>
               )}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1.5rem'
-              }}>
-                {/* First Name */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      backgroundColor: '#f9fafb',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      transition: 'border-color 0.2s'
-                    }}
-                  />
+
+              <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '500' }}>FIRST NAME</label>
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '1rem',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '14px',
+                        color: '#fff',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        transition: 'all 0.3s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#00c6ff'}
+                      onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '500' }}>LAST NAME</label>
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '1rem',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '14px',
+                        color: '#fff',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        transition: 'all 0.3s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#00c6ff'}
+                      onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                    />
+                  </div>
                 </div>
 
-                {/* Last Name */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      backgroundColor: '#f9fafb',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      transition: 'border-color 0.2s'
-                    }}
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Email
-                  </label>
+                  <label style={{ display: 'block', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '500' }}>EMAIL ADDRESS</label>
                   <input
                     type="email"
                     value={formData.email}
                     readOnly
                     style={{
                       width: '100%',
-                      padding: '0.875rem 1rem',
-                      backgroundColor: '#f3f4f6',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
+                      padding: '1rem',
+                      background: 'rgba(255, 255, 255, 0.01)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '14px',
+                      color: '#475569',
                       fontSize: '1rem',
-                      outline: 'none',
-                      color: '#6b7280',
                       cursor: 'not-allowed'
                     }}
                   />
                 </div>
 
-                {/* Phone Number */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Phone Number
-                  </label>
+                  <label style={{ display: 'block', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '500' }}>PHONE NUMBER</label>
                   <input
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    placeholder="+1 (555) 000-0000"
                     style={{
                       width: '100%',
-                      padding: '0.875rem 1rem',
-                      backgroundColor: '#f9fafb',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
+                      padding: '1rem',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '14px',
+                      color: '#fff',
                       fontSize: '1rem',
                       outline: 'none',
-                      transition: 'border-color 0.2s'
+                      transition: 'all 0.3s'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = '#00c6ff'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
                   />
                 </div>
 
-                {/* Address */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Address
-                  </label>
+                  <label style={{ display: 'block', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '500' }}>LOCATION</label>
                   <input
                     type="text"
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
+                    placeholder="City, Country"
                     style={{
                       width: '100%',
-                      padding: '0.875rem 1rem',
-                      backgroundColor: '#f9fafb',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
+                      padding: '1rem',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '14px',
+                      color: '#fff',
                       fontSize: '1rem',
                       outline: 'none',
-                      transition: 'border-color 0.2s'
+                      transition: 'all 0.3s'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = '#00c6ff'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
                   />
                 </div>
+
+                <div style={{ marginTop: '1rem' }}>
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      padding: '1rem 2rem',
+                      background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '14px',
+                      fontSize: '1rem',
+                      fontWeight: '700',
+                      cursor: loading ? 'wait' : 'pointer',
+                      boxShadow: '0 4px 15px rgba(0, 198, 255, 0.3)',
+                      transition: 'all 0.3s ease',
+                      width: '100%'
+                    }}
+                  >
+                    {loading ? 'Processing Changes...' : 'Save Updates'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{
+                background: 'rgba(0, 198, 255, 0.03)',
+                border: '1px solid rgba(0, 198, 255, 0.1)',
+                borderRadius: '24px',
+                padding: '2rem',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'rgba(0, 198, 255, 0.1)',
+                  borderRadius: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  color: '#00c6ff'
+                }}>
+                  <Zap size={28} />
+                </div>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 0.5rem 0' }}>Pro Level</h4>
+                <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Your subscription is active until Oct 2024. Next billing: $19.00</p>
+                <button style={{
+                  width: '100%',
+                  padding: '0.8rem',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}>
+                  Manage Subscription
+                </button>
               </div>
 
-              {/* Update Button */}
-              <div style={{ marginTop: '2rem' }}>
+              <div style={{
+                background: 'rgba(15, 15, 15, 0.5)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '24px',
+                padding: '2rem'
+              }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Security</h4>
                 <button 
-                  onClick={handleUpdateProfile}
-                  disabled={loading}
+                  onClick={() => navigate('/reset-password')}
                   style={{
                     width: '100%',
-                    padding: '1rem 2rem',
-                    backgroundColor: loading ? '#9ca3af' : '#06b6d4',
-                    color: 'white',
-                    border: 'none',
+                    padding: '0.8rem',
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '12px',
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)',
-                    transition: 'all 0.2s'
+                    color: '#fff',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
                   }}
                 >
-                  {loading ? 'Updating...' : 'Update'}
+                  <Settings size={16} />
+                  Change Password
                 </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      
+      <style>{`
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #1a1a1a;
+          border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #252525;
+        }
+      `}</style>
     </div>
   );
 };

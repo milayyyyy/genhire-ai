@@ -120,7 +120,7 @@ export default function MyPlan() {
         },
         body: JSON.stringify({
           amount: selectedNewPlan.price,
-          description: `InterviewPro ${selectedNewPlan.period === 'monthly' ? 'Monthly' : 'Yearly'} Subscription`,
+          description: `GenHire AI ${selectedNewPlan.period === 'monthly' ? 'Monthly' : 'Yearly'} Subscription`,
           plan: selectedNewPlan.id,
           period: selectedNewPlan.period,
           userId: user.uid

@@ -195,21 +195,15 @@ export default function LiveAIInterview() {
         }}>
           <iframe
             src="https://my.spline.design/genkubgreetingrobot-dKSdmkp6P4tsfaGKQgqQXWPd/"
-            style={{ width: '100%', height: '100%', border: 'none' }}
+            style={{ 
+              width: '100%', 
+              height: '115%', 
+              border: 'none',
+              position: 'absolute',
+              top: 0
+            }}
             allow="fullscreen; vr"
           ></iframe>
-          {/* White mask to cover Spline copyright */}
-          <div style={{
-            position: 'absolute',
-            bottom: '15px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '350px',
-            height: '45px',
-            backgroundColor: '#ffffff',
-            borderRadius: '6px',
-            zIndex: 10
-          }}></div>
         </div>
       </div>
 

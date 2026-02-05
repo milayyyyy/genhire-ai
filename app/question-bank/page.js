@@ -441,7 +441,7 @@ export default function QuestionBank() {
       // Title
       doc.setFontSize(20)
       doc.setFont('helvetica', 'bold')
-      doc.text('InterviewPro', margin, yPosition)
+      doc.text('GenHire AI', margin, yPosition)
       yPosition += 8
       doc.setFontSize(16)
       doc.text(currentAnalysis.isSummary ? 'Category Summary Report' : 'AI Analysis Report', margin, yPosition)
@@ -550,9 +550,9 @@ export default function QuestionBank() {
 
       doc.setFontSize(8)
       doc.setTextColor(128, 128, 128)
-      doc.text('InterviewPro - AI Interview Practice Platform', pageWidth / 2, pageHeight - 10, { align: 'center' })
+      doc.text('GenHire AI - AI Interview Practice Platform', pageWidth / 2, pageHeight - 10, { align: 'center' })
 
-      doc.save(`InterviewPro-Analysis-${Date.now()}.pdf`)
+      doc.save(`GenHire-AI-Analysis-${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF export error:', error)
       alert('Failed to export PDF. Please try again.')

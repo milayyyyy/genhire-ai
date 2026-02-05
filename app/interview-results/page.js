@@ -408,7 +408,7 @@ Overall, you showed good potential and with some targeted practice on the mentio
 
       pdf.setFontSize(8)
       pdf.setTextColor(156, 163, 175)
-      pdf.text('InterviewPro - AI-Powered Interview Practice', pageWidth / 2, pageHeight - 10, { align: 'center' })
+      pdf.text('GenHire AI - AI-Powered Interview Practice', pageWidth / 2, pageHeight - 10, { align: 'center' })
 
       // Save PDF
       pdf.save(`interview-results-${Date.now()}.pdf`)

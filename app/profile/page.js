@@ -328,7 +328,7 @@ export default function ProfilePage() {
                 margin: 0,
                 color: 'white'
               }}>
-                InterviewPro
+                GenHire AI
               </h2>
             </div>
           </div>

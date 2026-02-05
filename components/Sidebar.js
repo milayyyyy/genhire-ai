@@ -151,7 +151,7 @@ export default function Sidebar({ activeItem }) {
               margin: 0,
               color: 'white'
             }}>
-              InterviewPro
+              GenHire AI
             </h2>
           </div>
         </div>

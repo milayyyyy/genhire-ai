@@ -185,9 +185,7 @@ export default function LandingPage() {
           justify-content: flex-start;
           padding: 0 10%;
           box-sizing: border-box;
-          background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg?auto=compress&cs=tinysrgb&w=1600");
-          background-size: cover;
-          background-position: center;
+          background: #000;
         }
 
         /* Creative Background */

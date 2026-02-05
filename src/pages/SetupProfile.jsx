@@ -9,6 +9,7 @@ const SetupProfile = ({ onComplete, onSkip }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     phoneNumber: '',
     address: '',
     elementary: '',
@@ -17,6 +18,13 @@ const SetupProfile = ({ onComplete, onSkip }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Pre-fill email from auth user
+  React.useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({ ...prev, email: user.email }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({
@@ -33,11 +41,13 @@ const SetupProfile = ({ onComplete, onSkip }) => {
     setError('');
     
     try {
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('users')
-        .update({
+        .upsert({
+          id: user.id,
           first_name: formData.firstName,
           last_name: formData.lastName,
+          email: formData.email,
           phone_number: formData.phoneNumber,
           address: formData.address,
           education: {
@@ -45,12 +55,12 @@ const SetupProfile = ({ onComplete, onSkip }) => {
             high_school: formData.highSchool,
             college: formData.college
           },
-          updated_at: new Date()
-        })
-        .eq('id', user.id);
+          onboarding_completed: true,
+          updated_at: new Date().toISOString()
+        });
 
-      if (error) throw error;
-      onComplete(formData);
+      if (updateError) throw updateError;
+      onComplete?.(formData);
     } catch (err) {
       setError(err.message || 'Error updating profile');
     } finally {
@@ -68,165 +78,229 @@ const SetupProfile = ({ onComplete, onSkip }) => {
       height: '100vh',
       width: '100vw',
       display: 'flex',
-      fontFamily: 'Inter, sans-serif',
+      flexDirection: 'column',
+      fontFamily: "'Poppins', 'Inter', sans-serif",
       margin: 0,
       padding: 0,
-      overflow: 'hidden'
+      overflowX: 'hidden',
+      backgroundColor: '#000',
+      position: 'relative'
     }}>
-      {/* Left side - Background Image */}
-      <div style={{
-        width: '50%',
-        height: '100vh',
-        position: 'relative',
-        overflow: 'hidden',
-        display: window.innerWidth >= 1024 ? 'block' : 'none',
-        margin: 0,
-        padding: 0
-      }}>
-        <img
-          src="https://images.pexels.com/photos/3874038/pexels-photo-3874038.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-          alt="Two people having a conversation"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover'
-          }}
-        />
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.2)'
-        }}></div>
-      </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes shine {
+          to { background-position: 200% center; }
+        }
+        .shiny-title {
+          background: linear-gradient(to right, #fff 20%, #00c6ff 50%, #fff 80%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shine 5s linear infinite;
+        }
+        .grid-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: 
+            linear-gradient(rgba(0, 198, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 198, 255, 0.05) 1px, transparent 1px);
+          background-size: 50px 50px;
+          pointer-events: none;
+          zIndex: 1;
+        }
+        .bg-blob {
+          position: absolute;
+          width: 400px;
+          height: 400px;
+          background: radial-gradient(circle, rgba(0, 198, 255, 0.1) 0%, rgba(0, 114, 255, 0) 70%);
+          border-radius: 50%;
+          filter: blur(80px);
+          zIndex: 0;
+          pointer-events: none;
+        }
+        ::-webkit-scrollbar {
+          width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 198, 255, 0.5);
+        }
+        @media (max-width: 1024px) {
+          .setup-form-container {
+            flex-direction: column !important;
+            gap: 2rem !important;
+          }
+          .setup-section {
+            width: 100% !important;
+          }
+        }
+      `}} />
 
-      {/* Right side - Setup Profile Form */}
+      <div className="grid-overlay"></div>
+      <div className="bg-blob" style={{ top: '10%', left: '10%' }}></div>
+      <div className="bg-blob" style={{ bottom: '10%', right: '10%', background: 'radial-gradient(circle, rgba(255, 0, 255, 0.05) 0%, transparent 70%)' }}></div>
+
       <div style={{
-        width: window.innerWidth >= 1024 ? '50%' : '100%',
+        width: '100%',
         height: '100vh',
         display: 'flex',
-        alignItems: 'flex-start',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        backgroundColor: 'white',
-        margin: 0,
         boxSizing: 'border-box',
-        overflowY: 'auto'
+        overflow: 'hidden',
+        position: 'relative',
+        zIndex: 10
       }}>
+        {/* Title */}
         <div style={{
-          width: '100%',
-          maxWidth: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          paddingTop: '2rem'
+          textAlign: 'center',
+          marginBottom: '2rem'
         }}>
-          {/* Chat Icon */}
-          <div style={{
-            marginBottom: '2rem'
+          <h1 className="shiny-title" style={{
+            fontSize: '2.5rem',
+            fontWeight: '800',
+            marginBottom: '0.5rem',
+            letterSpacing: '-0.02em'
           }}>
-            <ChatBubbleLogo size={64} />
-          </div>
-
-          {/* Title */}
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '2rem'
+            Setup Profile
+          </h1>
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '0.95rem',
+            lineHeight: '1.4',
+            maxWidth: '500px'
           }}>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '0.5rem'
-            }}>
-              Setup Profile
-            </h1>
-          </div>
+            Help us personalize your interview experience.
+          </p>
+        </div>
 
-          {/* Setup Profile Form */}
-          <form onSubmit={handleSubmit} style={{ 
+        {/* Setup Profile Form */}
+        <form onSubmit={handleSubmit} style={{ 
+          width: '100%',
+          maxWidth: '900px',
+          display: 'flex', 
+          flexDirection: 'column',
+          gap: '2rem'
+        }}>
+          <div className="setup-form-container" style={{
+            display: 'flex',
+            gap: '3rem',
             width: '100%',
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '1.5rem' 
+            alignItems: 'flex-start'
           }}>
             {/* Personal Details Section */}
-            <div>
+            <div className="setup-section" style={{ flex: 1 }}>
               <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                color: '#111827',
-                marginBottom: '1rem',
-                borderBottom: '1px solid #e5e7eb',
-                paddingBottom: '0.5rem'
+                fontSize: '1.2rem',
+                fontWeight: '700',
+                color: '#fff',
+                marginBottom: '1.2rem',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                paddingBottom: '0.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem'
               }}>
+                <User size={20} color="#00c6ff" />
                 Personal Details
               </h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* First Name */}
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  placeholder="First Name"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
-                    outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
-                    boxSizing: 'border-box'
-                  }}
-                />
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="First Name"
+                    style={{
+                      flex: 1,
+                      padding: '0.85rem 1rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '0.75rem',
+                      outline: 'none',
+                      fontSize: '0.95rem',
+                      color: '#fff',
+                      transition: 'all 0.3s ease',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#00c6ff';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                    }}
+                  />
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Last Name"
+                    style={{
+                      flex: 1,
+                      padding: '0.85rem 1rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '0.75rem',
+                      outline: 'none',
+                      fontSize: '0.95rem',
+                      color: '#fff',
+                      transition: 'all 0.3s ease',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#00c6ff';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                    }}
+                  />
+                </div>
 
-                {/* Last Name */}
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  placeholder="Last Name"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
-                    outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
-                    boxSizing: 'border-box'
-                  }}
-                />
-
-                {/* Email */}
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="Email"
+                  placeholder="Email Address"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.75rem',
                     outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    transition: 'all 0.3s ease',
                     boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#00c6ff';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
                   }}
                 />
 
-                {/* Phone Number */}
                 <input
                   type="tel"
                   name="phoneNumber"
@@ -235,164 +309,216 @@ const SetupProfile = ({ onComplete, onSkip }) => {
                   placeholder="Phone Number"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.75rem',
                     outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    transition: 'all 0.3s ease',
                     boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#00c6ff';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
                   }}
                 />
 
-                {/* Address */}
                 <input
                   type="text"
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  placeholder="Address"
+                  placeholder="Home Address"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.75rem',
                     outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    transition: 'all 0.3s ease',
                     boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#00c6ff';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
                   }}
                 />
               </div>
             </div>
 
             {/* Education Section */}
-            <div>
+            <div className="setup-section" style={{ flex: 1 }}>
               <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                color: '#111827',
-                marginBottom: '1rem',
-                borderBottom: '1px solid #e5e7eb',
-                paddingBottom: '0.5rem'
+                fontSize: '1.2rem',
+                fontWeight: '700',
+                color: '#fff',
+                marginBottom: '1.2rem',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                paddingBottom: '0.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem'
               }}>
+                <GraduationCap size={20} color="#00c6ff" />
                 Education
               </h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* Elementary */}
                 <input
                   type="text"
                   name="elementary"
                   value={formData.elementary}
                   onChange={handleChange}
-                  placeholder="Elementary"
+                  placeholder="Elementary School"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.75rem',
                     outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    transition: 'all 0.3s ease',
                     boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#00c6ff';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
                   }}
                 />
 
-                {/* High School */}
                 <input
                   type="text"
                   name="highSchool"
                   value={formData.highSchool}
                   onChange={handleChange}
-                  placeholder="Senior High School / High School"
+                  placeholder="Senior High School"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.75rem',
                     outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    transition: 'all 0.3s ease',
                     boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#00c6ff';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
                   }}
                 />
 
-                {/* College */}
                 <input
                   type="text"
                   name="college"
                   value={formData.college}
                   onChange={handleChange}
-                  placeholder="College"
+                  placeholder="University / College"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: 'none',
-                    borderBottom: '1px solid #d1d5db',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.75rem',
                     outline: 'none',
-                    fontSize: '1rem',
-                    color: '#111827',
-                    backgroundColor: 'transparent',
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    transition: 'all 0.3s ease',
                     boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#00c6ff';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
                   }}
                 />
               </div>
             </div>
+          </div>
 
-            {/* Action Buttons */}
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              marginTop: '2rem'
-            }}>
-              <button
-                type="button"
-                onClick={handleSkip}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  border: '1px solid #22d3ee',
-                  color: '#06b6d4',
-                  backgroundColor: 'transparent',
-                  borderRadius: '0.75rem',
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#f0fdfa'}
-                onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-              >
-                Skip
-              </button>
-              <button
-                type="submit"
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  backgroundColor: '#06b6d4',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.75rem',
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#0891b2'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#06b6d4'}
-              >
-                Finish
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Action Buttons */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '1.5rem',
+            marginTop: '0.5rem'
+          }}>
+            <button
+              type="button"
+              onClick={handleSkip}
+              style={{
+                width: '180px',
+                padding: '1rem',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '2rem',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.target.style.color = '#fff';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.target.style.color = 'rgba(255, 255, 255, 0.6)';
+              }}
+            >
+              SKIP
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '180px',
+                padding: '1rem',
+                background: 'linear-gradient(135deg, #00c6ff, #0072ff)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '2rem',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+                boxShadow: '0 10px 20px rgba(0, 198, 255, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {loading ? 'SAVING...' : 'FINISH'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

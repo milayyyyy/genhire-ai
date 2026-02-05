@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -17,15 +17,103 @@ import {
   Award,
   AlertTriangle,
   DollarSign,
-  Grid3X3
+  Grid3X3,
+  ArrowRight
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
 
 const CategoriesPage = () => {
   const navigate = useNavigate();
+  const canvasRef = useRef(null);
+
+  // Particle Effect Logic
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const particles = [];
+    const particleCount = 100;
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 2;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.5)';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.15 * (1 - dist / 150)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   const allRoutes = [
-    // Authentication Routes
     {
       category: 'Authentication',
       routes: [
@@ -36,217 +124,220 @@ const CategoriesPage = () => {
         { path: '/setup-profile', name: 'Setup Profile', icon: User, description: 'Profile setup after registration' }
       ]
     },
-    // Dashboard Routes
     {
       category: 'Dashboards',
       routes: [
         { path: '/dashboard', name: 'Admin Dashboard', icon: BarChart3, description: 'Admin control panel' },
-        { path: '/user-dashboard', name: 'User Dashboard', icon: Home, description: 'Main user dashboard with performance overview' }
+        { path: '/user-dashboard', name: 'User Dashboard', icon: Home, description: 'Main user performance hub' }
       ]
     },
     {
       category: 'Interview System',
       routes: [
-        { path: '/live-ai-interview', name: 'Live AI Interview Setup', icon: Zap, description: 'Mock interview setup and configuration' },
-        { path: '/voice-interview', name: 'Voice Interview', icon: Mic, description: 'Active voice interview session' },
-        { path: '/interview-results', name: 'Interview Results', icon: Award, description: 'Interview completion and results page' }
+        { path: '/live-ai-interview', name: 'Interview Setup', icon: Zap, description: 'Mock interview configuration' },
+        { path: '/voice-interview', name: 'Voice Session', icon: Mic, description: 'Active AI interview session' },
+        { path: '/interview-results', name: 'Results', icon: Award, description: 'Completion feedback & scores' }
       ]
     },
-    // Analysis Routes
     {
       category: 'Performance Analysis',
       routes: [
-        { path: '/weakness-overview', name: 'Weakness Overview', icon: AlertTriangle, description: 'Detailed weakness analysis and improvement tips' }
+        { path: '/weakness-overview', name: 'AI Diagnostics', icon: AlertTriangle, description: 'Detailed weakness analysis' }
       ]
     },
     {
       category: 'Content & Resources',
       routes: [
-        { path: '/question-bank', name: 'Question Bank', icon: HelpCircle, description: 'Browse interview questions by category' }
+        { path: '/question-bank', name: 'Question Bank', icon: HelpCircle, description: 'Browse interview questions' }
       ]
     },
-    // Account Management Routes
     {
-      category: 'Account Management',
+      category: 'Account',
       routes: [
-        { path: '/profile', name: 'Profile', icon: User, description: 'User profile and personal information' },
-        { path: '/my-plan', name: 'My Plan (Subscriptions)', icon: CreditCard, description: 'Subscription management and billing' },
-        { path: '/pricing', name: 'Pricing Plans', icon: DollarSign, description: 'View and select subscription plans' },
-        { path: '/settings', name: 'Settings', icon: Settings, description: 'App preferences and customization' }
-      ]
-    },
-    // Utility Routes
-    {
-      category: 'Utility',
-      routes: [
-        { path: '/categories', name: 'Categories (This Page)', icon: Grid3X3, description: 'Site navigation overview' }
+        { path: '/profile', name: 'Profile', icon: User, description: 'Personal information' },
+        { path: '/my-plan', name: 'Subscription', icon: CreditCard, description: 'Billing management' },
+        { path: '/pricing', name: 'Pricing', icon: DollarSign, description: 'Select subscription plans' },
+        { path: '/settings', name: 'Settings', icon: Settings, description: 'Preferences & customization' }
       ]
     }
   ];
 
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      fontFamily: 'Inter, sans-serif'
+      backgroundColor: '#000',
+      color: '#fff',
+      fontFamily: "'Inter', sans-serif",
+      position: 'relative',
+      overflowX: 'hidden'
     }}>
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 1,
+          opacity: 0.6,
+          pointerEvents: 'none'
+        }}
+      />
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes shine {
+          to { background-position: 200% center; }
+        }
+        .shiny-title {
+          background: linear-gradient(to right, #fff 20%, #00c6ff 50%, #fff 80%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shine 5s linear infinite;
+        }
+        .route-card {
+          background: rgba(10, 10, 10, 0.4);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .route-card:hover {
+          transform: translateY(-5px);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: #00c6ff;
+          box-shadow: 0 10px 30px -10px rgba(0, 198, 255, 0.3);
+        }
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #00c6ff;
+        }
+      `}} />
+
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-        color: 'white',
-        padding: '3rem 2rem',
-        textAlign: 'center'
+        position: 'relative',
+        zIndex: 10,
+        padding: '4rem 2rem',
+        textAlign: 'center',
+        background: 'linear-gradient(to bottom, rgba(0, 198, 255, 0.05), transparent)'
       }}>
-        <div style={{
-          maxWidth: '800px',
+        <div style={{ 
+          maxWidth: '800px', 
           margin: '0 auto',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: '2rem'
+          gap: '1.5rem'
         }}>
-          <ChatBubbleLogo size={80} />
-          <div style={{ textAlign: 'left' }}>
-            <h1 style={{
-              fontSize: '2.5rem',
-              fontWeight: 'bold',
+          <ChatBubbleLogo size={60} />
+          <div>
+            <h1 className="shiny-title" style={{
+              fontSize: '3rem',
+              fontWeight: '900',
               margin: 0,
-              marginBottom: '0.5rem'
+              letterSpacing: '-0.04em'
             }}>
-              GenHire AI Categories
+              Map of GenHire
             </h1>
             <p style={{
-              fontSize: '1.125rem',
-              color: 'rgba(255, 255, 255, 0.9)',
-              margin: 0
+              fontSize: '1.1rem',
+              color: '#94a3b8',
+              marginTop: '0.75rem'
             }}>
-              Navigate to any page in the GenHire AI application
+              Quick access to every portal in the ecosystem.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{
+      {/* Grid Content */}
+      <main style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '3rem 2rem'
+        padding: '0 2rem 6rem',
+        position: 'relative',
+        zIndex: 10
       }}>
-        {allRoutes.map((category, categoryIndex) => (
-          <div
-            key={categoryIndex}
-            style={{
-              marginBottom: '3rem'
-            }}
-          >
-            {/* Category Header */}
+        {allRoutes.map((category, idx) => (
+          <div key={idx} style={{ marginBottom: '4rem' }}>
             <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#374151',
-              marginBottom: '1.5rem',
-              paddingBottom: '0.5rem',
-              borderBottom: '2px solid #06b6d4'
+              fontSize: '1.25rem',
+              fontWeight: '800',
+              color: '#fff',
+              marginBottom: '2rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
             }}>
-              {category.category}
+              <span style={{ 
+                width: '4px', 
+                height: '24px', 
+                background: 'linear-gradient(to bottom, #00c6ff, #0072ff)',
+                borderRadius: '2px'
+              }} />
+              {category.category.toUpperCase()}
             </h2>
 
-            {/* Route Cards */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
               gap: '1.5rem'
             }}>
-              {category.routes.map((route, routeIndex) => {
+              {category.routes.map((route, ridx) => {
                 const Icon = route.icon;
                 return (
                   <div
-                    key={routeIndex}
-                    onClick={() => handleNavigation(route.path)}
+                    key={ridx}
+                    className="route-card"
+                    onClick={() => navigate(route.path)}
                     style={{
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      padding: '1.5rem',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-                      border: '1px solid #e5e7eb',
+                      borderRadius: '24px',
+                      padding: '2rem',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
                       display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '1rem'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.1)';
-                      e.currentTarget.style.borderColor = '#06b6d4';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)';
-                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      flexDirection: 'column',
+                      gap: '1.25rem'
                     }}
                   >
-                    {/* Icon */}
                     <div style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: '#06b6d4',
-                      borderRadius: '12px',
+                      borderRadius: '16px',
+                      background: 'rgba(0, 198, 255, 0.1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      flexShrink: 0
+                      color: '#00c6ff'
                     }}>
-                      <Icon size={24} color="white" />
+                      <Icon size={24} />
+                    </div>
+                    
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>{route.name}</h3>
+                      <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5' }}>{route.description}</p>
                     </div>
 
-                    {/* Content */}
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{
-                        fontSize: '1.125rem',
-                        fontWeight: '600',
-                        color: '#374151',
-                        margin: 0,
-                        marginBottom: '0.5rem'
-                      }}>
-                        {route.name}
-                      </h3>
-                      <p style={{
-                        color: '#6b7280',
-                        fontSize: '0.875rem',
-                        margin: 0,
-                        marginBottom: '0.75rem',
-                        lineHeight: '1.4'
-                      }}>
-                        {route.description}
-                      </p>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        <code style={{
-                          backgroundColor: '#f3f4f6',
-                          color: '#374151',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontFamily: 'monospace'
-                        }}>
-                          {route.path}
-                        </code>
-                        <span style={{
-                          color: '#06b6d4',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          Click to navigate →
-                        </span>
-                      </div>
+                    <div style={{ 
+                      marginTop: 'auto',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
+                      color: '#00c6ff',
+                      opacity: 0.8
+                    }}>
+                      ENTER PORTAL <ArrowRight size={14} />
                     </div>
                   </div>
                 );
@@ -254,8 +345,7 @@ const CategoriesPage = () => {
             </div>
           </div>
         ))}
-
-      </div>
+      </main>
     </div>
   );
 };

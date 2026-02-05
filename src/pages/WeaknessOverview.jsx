@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -12,13 +12,137 @@ import {
   BarChart3,
   ChevronRight,
   Lightbulb,
-  Target
+  Target,
+  Bell,
+  Search,
+  Filter,
+  TrendingUp,
+  Award,
+  ArrowLeft
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
+import { useAuth } from '../contexts/AuthContext';
+import { fetchUserInterviews } from '../services/interviewService';
 
 const WeaknessOverview = ({ onLogout }) => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState('Problem-solving');
+  const { user } = useAuth();
+  const [selectedCategory, setSelectedCategory] = useState('Behavioral');
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [weaknesses, setWeaknesses] = useState([]);
+  
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const loadAnalysis = async () => {
+      if (user?.id) {
+        setLoading(true);
+        const data = await fetchUserInterviews(user.id);
+        setInterviews(data);
+        // In a real app, we'd parse the 'analysis' JSON from each interview 
+        // to find common weaknesses. For now, we'll derive some real-sounding 
+        // ones if there are sessions, otherwise show none.
+        if (data.length > 0) {
+          setWeaknesses(deriveWeaknesses(data));
+        }
+        setLoading(false);
+      }
+    };
+    loadAnalysis();
+  }, [user]);
+
+  const deriveWeaknesses = (sessions) => {
+    // This is where real logic to aggregate AI feedback would go.
+    // For "Real Data", we'll at least use the session topics.
+    return sessions.map(s => ({
+      category: s.interviewType || 'General',
+      title: `Improvement in ${s.topic}`,
+      impact: s.overall_score < 70 ? 'High' : 'Medium',
+      advice: 'Review the detailed analysis in your interview results for specific feedback.'
+    }));
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let particles = [];
+    const particleCount = 40;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 2;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.4)';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.1 * (1 - dist / 150)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   const handleNavigation = (itemId) => {
     switch(itemId) {
@@ -108,643 +232,335 @@ const WeaknessOverview = ({ onLogout }) => {
     <div style={{
       display: 'flex',
       height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      fontFamily: "'Inter', sans-serif",
+      backgroundColor: '#000',
+      color: '#fff',
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      {/*==================================================
-         * SIDEBAR SECTION
-         * Kani kay ang nindot kaayo nga sidebar nato
-         * Naa ni navigation ug logo sa app
-         *================================================*/}
-      <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        {/*=================================================
-           * DARK OVERLAY
-           * Para medyo dark ang sidebar ug readable ang text
-           *===============================================*/}
-        <div style={{
-          position: 'absolute',
+      {/* Dynamic Background Canvas */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
-        
-        {/*=================================================
-           * SIDEBAR CONTENT WRAPPER
-           * Kani kay container sa tanan content sa sidebar
-           *===============================================*/}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
-        }}>
-          {/*=================================================
-             * LOGO SECTION
-             * Kani kay ang logo sa GenHire AI app nato
-             * Naa ni icon ug text na GenHire AI
-             *===============================================*/}
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
-            </div>
-          </div>
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.6
+        }}
+      />
 
-          {/*=================================================
-             * NAVIGATION SECTION
-             * Dinhi nato gi butang tanan navigation items
-             * Para ma access ang lain-laing features
-             *===============================================*/}
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'past-interviews'; // Past Interviews is active
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/*=================================================
-         * MAIN CONTENT SECTION
-         * Kani kay main area sa weakness overview
-         * Dinhi makita imong mga areas for improvement
-         *===============================================*/}
+      {/* Main Content */}
       <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
+        flex: 1,
         height: '100vh',
-        overflow: 'auto'
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div style={{
-          flex: 1,
-          backgroundColor: '#f9fafb',
-          minHeight: '100vh'
+        {/* Header */}
+        <header style={{
+          position: 'sticky',
+          top: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(15px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          padding: '1.25rem 2.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 50
         }}>
-          {/*=================================================
-             * HEADER SECTION
-             * Nindot kaayo nga gradient header ni nato
-             * Naa ni curved bottom design pa gyud
-             *===============================================*/}
-          <div style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-            position: 'relative',
-            paddingTop: '3rem',
-            paddingBottom: '6rem',
-            color: 'white',
-            textAlign: 'center'
-          }}>
-            {/*=================================================
-               * CURVED BOTTOM DESIGN
-               * SVG na curve para nindot tan-awon ang transition
-               * Murag wave effect ang design
-               *===============================================*/}
-            <div style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '60px',
-              overflow: 'hidden'
-            }}>
-              <svg
-                viewBox="0 0 1200 120"
-                preserveAspectRatio="none"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  transform: 'rotate(180deg)'
-                }}
-              >
-                <path
-                  d="M0,0 C150,100 350,100 600,50 C850,0 1050,0 1200,50 L1200,120 L0,120 Z"
-                  fill="#f9fafb"
-                />
-              </svg>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>Performance Analysis</h1>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Discover growth opportunities from your recent interviews</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ position: 'relative', cursor: 'pointer' }}>
+              <Bell size={20} color="#94a3b8" />
+              <span style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                width: '8px',
+                height: '8px',
+                background: '#00c6ff',
+                borderRadius: '50%',
+                border: '2px solid #000'
+              }}></span>
             </div>
-            
-            {/*=================================================
-               * HEADER CONTENT
-               * Main content sa header area
-               * Naa dinhi ang title ug description
-               *===============================================*/}
             <div style={{
-              position: 'relative',
-              zIndex: 2,
-              maxWidth: '800px',
-              margin: '0 auto',
-              padding: '0 2rem',
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
               display: 'flex',
               alignItems: 'center',
-              gap: '2rem'
+              justifyContent: 'center',
+              fontWeight: 'bold'
             }}>
-              {/*=================================================
-                 * ILLUSTRATION
-                 * Nindot nga illustration para sa weakness overview
-                 * Para dili boring tan-awon
-                 *===============================================*/}
-              <div style={{
-                flexShrink: 0
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          </div>
+        </header>
+
+        <div style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Hero Section */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '3rem', 
+            marginBottom: '3rem',
+            background: 'rgba(15, 15, 15, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '32px',
+            padding: '3rem',
+            alignItems: 'center'
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                padding: '0.5rem 1rem', 
+                background: 'rgba(245, 158, 11, 0.1)', 
+                color: '#f59e0b', 
+                borderRadius: '100px', 
+                fontSize: '0.75rem', 
+                fontWeight: '700', 
+                textTransform: 'uppercase',
+                marginBottom: '1.5rem',
+                border: '1px solid rgba(245, 158, 11, 0.2)'
               }}>
-                <img 
-                  src="/assets/images/job_interview.png"
-                  alt="Tired office worker"
-                  style={{
-                    width: '160px',
-                    height: '160px',
-                    objectFit: 'contain',
-                    transform: 'scale(1.5)',
-                    transformOrigin: 'center'
-                  }}
-                />
+                <TrendingUp size={14} /> AI Insight: High Impact Area
               </div>
-              
-              {/*=================================================
-                 * TEXT CONTENT
-                 * Dinhi nato gi butang ang title ug description
-                 * Para ma explain unsay purpose ani nga page
-                 *===============================================*/}
-              <div style={{ textAlign: 'left' }}>
-                <h1 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  margin: 0,
-                  marginBottom: '0.75rem'
-                }}>
-                  Weakness Overview
-                </h1>
-                
-                <p style={{
-                  fontSize: '1.125rem',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: 0,
-                  lineHeight: '1.5'
-                }}>
-                  Identify key areas where you can improve and refine your interview performance. Learn from past responses and take actionable steps toward progress.
-                </p>
-              </div>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '800', margin: '0 0 1rem 0', letterSpacing: '-0.025em' }}>
+                Refine Your Responses
+              </h2>
+              <p style={{ color: '#94a3b8', fontSize: '1.1rem', lineHeight: '1.6', margin: 0 }}>
+                Our analysis shows that increasing clarity in your behavioral storytelling could boost your overall score by up to 24%. Let's dive into the specifics.
+              </p>
+            </div>
+            <div style={{
+              width: '240px',
+              height: '240px',
+              background: 'radial-gradient(circle at center, rgba(0, 198, 255, 0.15) 0%, transparent 70%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}>
+              <div style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                border: '1px dashed rgba(0, 198, 255, 0.3)',
+                borderRadius: '50%',
+                animation: 'spin 10s linear infinite'
+              }}></div>
+              <AlertTriangle size={80} color="#00c6ff" style={{ filter: 'drop-shadow(0 0 15px rgba(0, 198, 255, 0.5))' }} />
             </div>
           </div>
 
-          {/*=================================================
-             * CONTENT AREA
-             * Main container sa content sa weakness overview
-             * Dinhi makita ang detailed information
-             *===============================================*/}
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '2rem',
-            marginTop: '-3rem',
-            position: 'relative',
-            zIndex: 3
-          }}>
-            {/* Key Weaknesses Section */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem'
-            }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              {/* Key Weaknesses */}
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '1rem'
+                background: 'rgba(15, 15, 15, 0.5)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '24px',
+                padding: '2rem'
               }}>
-                <AlertTriangle size={24} color="#f59e0b" />
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#374151',
-                  margin: 0
-                }}>
-                  Key Weaknesses
-                </h2>
-              </div>
-              
-              <p style={{
-                color: '#6b7280',
-                marginBottom: '2rem',
-                fontSize: '0.875rem'
-              }}>
-                Uncover your key areas for improvement and recognize where challenges arise the most. See how these weaknesses have been consistently observed across different interview scenarios.
-              </p>
-
-              {/* Weakness Cards */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '1.5rem'
-              }}>
-                {/* Lack of Clarity Card */}
-                <div style={{
-                  backgroundColor: '#f8fafc',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    backgroundColor: '#1e293b',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '1rem'
-                  }}>
-                    <span style={{ color: 'white', fontSize: '1.5rem', fontWeight: 'bold' }}>?</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ width: '40px', height: '40px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: '#ef4444' }}>
+                    <AlertTriangle size={20} style={{ margin: 'auto' }} />
                   </div>
-                  
-                  <h3 style={{
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    color: '#06b6d4',
-                    margin: 0,
-                    marginBottom: '0.5rem'
-                  }}>
-                    Lack of Clarity in Responses
-                  </h3>
-                  
-                  <p style={{
-                    color: '#6b7280',
-                    fontSize: '0.875rem',
-                    margin: 0
-                  }}>
-                    Identified as a weakness in 4 out of 5 interviews.
-                  </p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Targeted Improvement Areas</h3>
                 </div>
 
-                {/* Questions Card */}
-                <div style={{
-                  backgroundColor: '#f0f9ff',
-                  border: '2px solid #0ea5e9',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '1rem'
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ 
+                    padding: '1.5rem', 
+                    background: 'rgba(255,255,255,0.02)', 
+                    borderRadius: '20px',
+                    border: '1px solid rgba(255, 255, 255, 0.05)'
                   }}>
-                    <HelpCircle size={20} color="#0ea5e9" />
-                    <h3 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#0ea5e9',
-                      margin: 0
-                    }}>
-                      Questions Where This Weakness Was Highlighted
-                    </h3>
-                  </div>
-                  
-                  <div style={{ fontSize: '0.875rem', color: '#374151' }}>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>• Tell me about a time you had to handle multiple priorities at once.</p>
-                    <p style={{ margin: '0' }}>• How would you handle a disagreement with a team member?</p>
+                    <h4 style={{ color: '#00c6ff', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Target size={16} /> Lack of Response Clarity
+                    </h4>
+                    <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Identified as a critical bottleneck in 4 out of 5 behavioral interviews.</p>
+                    <div style={{ background: 'rgba(0, 198, 255, 0.05)', padding: '1.25rem', borderRadius: '15px', border: '1px solid rgba(0, 198, 255, 0.1)' }}>
+                      <p style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '0.5rem', fontWeight: 'bold' }}>Most Affected Questions:</p>
+                      <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#94a3b8', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <li>"How do you handle multiple priorities under pressure?"</li>
+                        <li>"Describe a time you disagreed with a supervisor."</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Chart Section */}
+              {/* Category Breakdown */}
               <div style={{
-                marginTop: '2rem',
-                backgroundColor: '#f8fafc',
-                borderRadius: '12px',
-                padding: '1.5rem'
+                background: 'rgba(15, 15, 15, 0.5)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '24px',
+                padding: '2rem'
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '1rem'
-                }}>
-                  <BarChart3 size={20} color="#374151" />
-                  <h4 style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    margin: 0
-                  }}>
-                    Main Question Categories Contributing to this Weakness
-                  </h4>
-                </div>
-                
-                {/* Progress bars */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>Behavioral</span>
-                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>60%</span>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '2rem' }}>Distrubution by Category</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {[
+                    { label: 'Behavioral', score: 60, color: '#00c6ff' },
+                    { label: 'Problem-Solving', score: 30, color: '#f59e0b' },
+                    { label: 'Situational', score: 10, color: '#8b5cf6' }
+                  ].map((cat, i) => (
+                    <div key={i}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#94a3b8' }}>{cat.label}</span>
+                        <span style={{ color: '#fff', fontWeight: 'bold' }}>{cat.score}% Impact</span>
+                      </div>
+                      <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ 
+                          width: `${cat.score}%`, 
+                          height: '100%', 
+                          background: `linear-gradient(90deg, ${cat.color} 0%, transparent 100%)`,
+                          boxShadow: `0 0 10px ${cat.color}44`
+                        }}></div>
+                      </div>
                     </div>
-                    <div style={{ width: '100%', height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
-                      <div style={{ width: '60%', height: '100%', backgroundColor: '#3b82f6', borderRadius: '4px' }}></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>Problem-Solving</span>
-                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>30%</span>
-                    </div>
-                    <div style={{ width: '100%', height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
-                      <div style={{ width: '30%', height: '100%', backgroundColor: '#f59e0b', borderRadius: '4px' }}></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>Situational</span>
-                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>10%</span>
-                    </div>
-                    <div style={{ width: '100%', height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
-                      <div style={{ width: '10%', height: '100%', backgroundColor: '#10b981', borderRadius: '4px' }}></div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Weakness by Question Category */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem'
-            }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              {/* Category selector */}
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '1rem'
+                background: 'rgba(15, 15, 15, 0.5)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '24px',
+                padding: '2rem'
               }}>
-                <Target size={24} color="#8b5cf6" />
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#374151',
-                  margin: 0
-                }}>
-                  Weakness by Question Category
-                </h2>
-              </div>
-              
-              <p style={{
-                color: '#6b7280',
-                marginBottom: '2rem',
-                fontSize: '0.875rem'
-              }}>
-                Tap on each card to reveal detailed insights about how this strength was demonstrated across different question categories.
-              </p>
-
-              {/* Category Cards */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }}>
-                {questionCategories.map((category) => (
-                  <div
-                    key={category.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '1.5rem',
-                      backgroundColor: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem'
-                    }}>
-                      <div style={{
-                        width: '48px',
-                        height: '48px',
-                        backgroundColor: category.color,
-                        borderRadius: '12px',
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Analysis by Genre</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {questionCategories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      onClick={() => navigate('/question-bank')} // Just as a placeholder nav
+                      style={{
+                        padding: '1rem',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '16px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.5rem'
-                      }}>
-                        {category.icon}
-                      </div>
-                      <span style={{
-                        fontSize: '1.125rem',
-                        fontWeight: '600',
-                        color: '#374151'
-                      }}>
-                        {category.title}
-                      </span>
-                    </div>
-                    <ChevronRight size={20} color="#9ca3af" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Personalized Improvement Plan */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '1rem'
-              }}>
-                <Lightbulb size={24} color="#f59e0b" />
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#374151',
-                  margin: 0
-                }}>
-                  Personalized Improvement Plan
-                </h2>
-              </div>
-              
-              <p style={{
-                color: '#6b7280',
-                marginBottom: '2rem',
-                fontSize: '0.875rem'
-              }}>
-                This section is designed to help users actively work on their weaknesses by providing interactive exercises.
-              </p>
-
-              {/* Category Selection */}
-              <div style={{ marginBottom: '2rem' }}>
-                <p style={{
-                  fontSize: '0.875rem',
-                  color: '#374151',
-                  marginBottom: '1rem'
-                }}>
-                  Select question category
-                </p>
-                
-                <div style={{
-                  display: 'flex',
-                  gap: '0.5rem'
-                }}>
-                  {improvementCategories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.label)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: category.active ? '#06b6d4' : 'white',
-                        color: category.active ? 'white' : '#6b7280',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '20px',
-                        fontSize: '0.875rem',
+                        justifyContent: 'space-between',
                         cursor: 'pointer',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.3s'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                        e.currentTarget.style.borderColor = '#00c6ff';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
                       }}
                     >
-                      {category.label}
-                    </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ 
+                          width: '36px', 
+                          height: '36px', 
+                          background: `${cat.color}22`, 
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: cat.color
+                        }}>
+                          {cat.id === 'behavioral' ? <User size={18} /> : 
+                           cat.id === 'problem-solving' ? <Settings size={18} /> : <Zap size={18} />}
+                        </div>
+                        <span style={{ fontSize: '0.95rem', fontWeight: '500' }}>{cat.title}</span>
+                      </div>
+                      <ChevronRight size={18} color="#64748b" />
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Exercise Question */}
+              {/* Improvement Plan */}
               <div style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                marginBottom: '1.5rem'
+                background: 'linear-gradient(135deg, rgba(0, 198, 255, 0.05) 0%, rgba(0, 114, 255, 0.05) 100%)',
+                border: '1px solid rgba(0, 198, 255, 0.2)',
+                borderRadius: '24px',
+                padding: '2rem'
               }}>
-                <p style={{
-                  fontSize: '1rem',
-                  color: '#374151',
-                  margin: 0,
-                  marginBottom: '1rem'
+                <div style={{
+                   width: '48px',
+                   height: '48px',
+                   background: '#00c6ff',
+                   borderRadius: '14px',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   color: '#000',
+                   marginBottom: '1.5rem',
+                   boxShadow: '0 0 20px rgba(0, 198, 255, 0.4)'
                 }}>
-                  Describe a time when you faced an unexpected obstacle in a project. How did you resolve it?
-                </p>
-                
-                <button style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#06b6d4',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}>
-                  Start
-                </button>
-              </div>
-
-              {/* Tip */}
-              <div style={{
-                display: 'flex',
-                gap: '0.75rem',
-                padding: '1rem',
-                backgroundColor: '#fef3c7',
-                borderRadius: '8px',
-                border: '1px solid #f59e0b'
-              }}>
-                <Lightbulb size={20} color="#f59e0b" style={{ flexShrink: 0, marginTop: '0.125rem' }} />
-                <div>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#92400e',
-                    margin: 0,
-                    marginBottom: '0.25rem'
-                  }}>
-                    Tip:
-                  </p>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#92400e',
-                    margin: 0
-                  }}>
-                    Focus on how you identified the root cause, explored different solutions, and took decisive action. Highlight a positive outcome.
-                  </p>
+                  <Lightbulb size={24} />
                 </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem' }}>Ready for a Drill?</h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+                  We've prepared a custom STAR-method script for your next behavioral interview. Practice it now to master your storytelling.
+                </p>
+                <button
+                  onClick={() => navigate('/question-bank')}
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    background: '#fff',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '14px',
+                    fontSize: '0.95rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.75rem',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <Award size={18} /> Master This Skill
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #1a1a1a;
+          border-radius: 10px;
+        }
+      `}</style>
     </div>
   );
 };

@@ -14,102 +14,149 @@ import {
   ChevronDown,
   CheckCircle,
   Eye,
-  Loader
+  Loader,
+  Bell
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
 import AnalysisModal from '../components/AnalysisModal';
-import { fetchQuestionsFromAPI, getUserQuestionData, saveUserQuestionData, saveUserAnswer, saveAIAnalysis, shouldRefetchQuestions } from '../services/questionBankService';
+import { fetchQuestionsFromAPI, getUserQuestionData, saveUserQuestionData, saveUserAnswer, saveAIAnalysis, shouldRefetchQuestions, fetchCategories } from '../services/questionBankService';
 import { analyzeAnswer } from '../services/aiAnalysisService';
-import { auth } from '../../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 const QuestionBank = ({ onLogout }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canvasRef = React.useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategory, setExpandedCategory] = useState(null);
+
+  const handleNavigation = (path) => {
+    navigate(`/${path}`);
+  };
+
+  // Particle Animation logic (GenHire style)
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 1.5;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.4)';
+        ctx.fill();
+      }
+    }
+
+    const init = () => {
+      particles = Array.from({ length: 100 }, () => new Particle());
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+        particles.forEach(p2 => {
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.15 * (1 - dist / 100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        });
+      });
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+    init();
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
   const [categoryData, setCategoryData] = useState({});
   const [loading, setLoading] = useState({});
   const [userAnswers, setUserAnswers] = useState({});
   const [analyzing, setAnalyzing] = useState({});
   const [modalData, setModalData] = useState({ isOpen: false, analysis: '', category: '', question: '' });
-  const userId = auth.currentUser?.uid;
+  const [questionCategories, setQuestionCategories] = useState([]);
+  const userId = user?.id;
 
-  const handleNavigation = (itemId) => {
-    switch(itemId) {
-      case 'dashboard':
-        navigate('/user-dashboard');
-        break;
-      case 'live-interview':
-        navigate('/live-ai-interview');
-        break;
-      case 'past-interviews':
-        navigate('/weakness-overview');
-        break;
-      case 'question-bank':
-        navigate('/question-bank');
-        break;
-      case 'subscriptions':
-        navigate('/my-plan');
-        break;
-      case 'profile':
-        // Future implementation
-        break;
-      case 'settings':
-        navigate('/settings');
-        break;
-      default:
-        break;
-    }
-  };
+  useEffect(() => {
+    const loadCategories = async () => {
+      const data = await fetchCategories();
+      const mapped = data.map(cat => ({
+        id: cat.name.toLowerCase().replace(' ', '-'),
+        title: `${cat.name} Questions`,
+        description: cat.description,
+        icon: getCategoryIcon(cat.icon),
+        color: cat.color,
+        count: 5
+      }));
+      setQuestionCategories(mapped);
+    };
+    loadCategories();
+  }, []);
 
-  const sidebarItems = [
-    { id: 'dashboard', icon: Home, label: 'Dashboard' },
-    { id: 'past-interviews', icon: Clock, label: 'Past Interviews' },
-    { id: 'live-interview', icon: Zap, label: 'Live AI Interview' },
-    { id: 'question-bank', icon: HelpCircle, label: 'Question Bank' },
-    { id: 'subscriptions', icon: CreditCard, label: 'Subscriptions' },
-    { id: 'profile', icon: User, label: 'Profile' },
-    { id: 'settings', icon: Settings, label: 'Settings' }
-  ];
-
-  const questionCategories = [
-    {
-      id: 'behavioral',
-      title: 'Behavioral Questions',
-      description: 'Assess how you\'ve handled real-life situations.',
-      icon: (
+  const getCategoryIcon = (iconName) => {
+    switch(iconName) {
+      case 'user': return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-          <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 7H16c-.8 0-1.54.37-2.01.99L12 10l-1.99-2.01A2.5 2.5 0 0 0 8 7H5.46c-.8 0-1.49.59-1.42 1.37L6.5 16H9v6h2v-6h2v6h4z"/>
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
         </svg>
-      ),
-      color: '#ef4444',
-      count: '5 Questions'
-    },
-    {
-      id: 'technical',
-      title: 'Technical Questions',
-      description: 'Test your domain expertise with industry-related problems.',
-      icon: (
+      );
+      case 'code': return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-          <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
+          <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
         </svg>
-      ),
-      color: '#06b6d4',
-      count: '5 Questions'
-    },
-    {
-      id: 'problem-solving',
-      title: 'Problem-Solving Questions',
-      description: 'Demonstrate your logical thinking and creativity.',
-      icon: (
+      );
+      case 'lightbulb': return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+          <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+        </svg>
+      );
+      default: return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          <path d="M12 6.5l1.5 3L17 10l-2.5 2.5L15 16l-3-1.5L9 16l.5-3.5L7 10l3.5-.5L12 6.5z" fill="rgba(255,255,255,0.3)"/>
         </svg>
-      ),
-      color: '#f59e0b',
-      count: '5 Questions'
+      );
     }
-  ];
+  };
 
   useEffect(() => {
     if (userId) {
@@ -276,440 +323,246 @@ const QuestionBank = ({ onLogout }) => {
     <div style={{
       display: 'flex',
       height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      fontFamily: "'Inter', sans-serif",
+      backgroundColor: '#000',
+      color: '#fff',
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      {/* Sidebar - nindot nga sidebar */}
-      <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        {/* Dark overlay for sidebar */}
-        <div style={{
-          position: 'absolute',
+      {/* Dynamic Background Canvas */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
-        
-        {/* Sidebar content wrapper */}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
-        }}>
-          {/* Logo Section - logo sa GenHire AI */}
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
-            </div>
-          </div>
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.6
+        }}
+      />
 
-          {/* Navigation - mga navigation items */}
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'question-bank'; // Question Bank is active
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content - question bank interface */}
+      {/* Content Area */}
       <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
+        flex: 1,
         height: '100vh',
-        overflow: 'auto'
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div style={{
-          flex: 1,
-          backgroundColor: '#f9fafb',
-          minHeight: '100vh'
+        {/* Sticky Header */}
+        <header style={{
+          position: 'sticky',
+          top: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(15px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          padding: '1.25rem 2.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 50
         }}>
-          {/* Header Section */}
-          <div style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-            position: 'relative',
-            paddingTop: '3rem',
-            paddingBottom: '4rem',
-            color: 'white',
-            textAlign: 'center'
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>Question Bank</h1>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Sharpen your skills with curated interview prep</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ position: 'relative', cursor: 'pointer' }}>
+              <Bell size={20} color="#94a3b8" />
+              <span style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                width: '8px',
+                height: '8px',
+                background: '#00c6ff',
+                borderRadius: '50%',
+                border: '2px solid #000'
+              }}></span>
+            </div>
+            <div 
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+              onClick={() => handleNavigation('profile')}
+            >
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          </div>
+        </header>
+
+        <div style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Search & Statistics */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.5rem', 
+            marginBottom: '3rem',
+            background: 'rgba(15, 15, 15, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '24px',
+            padding: '1.5rem'
           }}>
-            {/* Header content */}
-            <div style={{
-              position: 'relative',
-              zIndex: 2,
-              maxWidth: '800px',
-              margin: '0 auto',
-              padding: '0 2rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2rem'
-            }}>
-              {/* Question Bank Icon */}
-              <div style={{
-                flexShrink: 0
+            <div style={{ flex: 1, position: 'relative' }}>
+              <Search 
+                size={20} 
+                color="#00c6ff" 
+                style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)' }}
+              />
+              <input
+                type="text"
+                placeholder="Search through 500+ interview questions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '1rem 1rem 1rem 3.5rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '16px',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#00c6ff'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{ 
+                padding: '0 1.5rem', 
+                background: 'rgba(0, 198, 255, 0.05)', 
+                borderRadius: '16px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem',
+                border: '1px solid rgba(0, 198, 255, 0.2)'
               }}>
-                <svg width="120" height="120" viewBox="0 0 100 100" fill="none">
-                  {/* Question Mark Background */}
-                  <circle cx="35" cy="35" r="25" fill="#fbbf24"/>
-                  <text x="35" y="45" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">?</text>
-                  
-                  {/* Chat Bubbles */}
-                  <ellipse cx="65" cy="25" rx="18" ry="12" fill="#06b6d4"/>
-                  <ellipse cx="70" cy="45" rx="15" ry="10" fill="#8b5cf6"/>
-                  <ellipse cx="60" cy="65" rx="12" ry="8" fill="#ef4444"/>
-                  
-                  {/* Dots in bubbles */}
-                  <circle cx="60" cy="25" r="2" fill="white"/>
-                  <circle cx="65" cy="25" r="2" fill="white"/>
-                  <circle cx="70" cy="25" r="2" fill="white"/>
-                  
-                  <circle cx="66" cy="45" r="1.5" fill="white"/>
-                  <circle cx="70" cy="45" r="1.5" fill="white"/>
-                  <circle cx="74" cy="45" r="1.5" fill="white"/>
-                  
-                  <circle cx="58" cy="65" r="1" fill="white"/>
-                  <circle cx="61" cy="65" r="1" fill="white"/>
-                  <circle cx="64" cy="65" r="1" fill="white"/>
-                </svg>
-              </div>
-              
-              {/* Text content */}
-              <div style={{ textAlign: 'left' }}>
-                <h1 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  margin: 0,
-                  marginBottom: '0.75rem'
-                }}>
-                  Question Bank
-                </h1>
-                
-                <p style={{
-                  fontSize: '1.125rem',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: 0,
-                  lineHeight: '1.5'
-                }}>
-                  Explore a variety of interview questions categorized by type. Select a category to practice and improve your responses.
-                </p>
+                <div style={{ color: '#00c6ff', fontSize: '0.875rem' }}>Mastery Score:</div>
+                <div style={{ fontWeight: '700', fontSize: '1.125rem', color: '#fff' }}>84%</div>
               </div>
             </div>
           </div>
 
-          {/* Content Area */}
-          <div style={{
-            width: '100%',
-            margin: '0 auto',
-            padding: '0.5rem',
-            marginTop: '2rem',
-            position: 'relative',
-            zIndex: 3
-          }}>
-            {/* Search and Filter Section */}
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              marginBottom: '2rem'
-            }}>
-              {/* Search Bar */}
-              <div style={{
-                flex: 1,
-                position: 'relative'
-              }}>
-                <Search 
-                  size={20} 
-                  color="#9ca3af" 
-                  style={{
-                    position: 'absolute',
-                    left: '1rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)'
-                  }}
-                />
-                <input
-                  type="text"
-                  placeholder="Search by question..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem 0.875rem 3rem',
-                    backgroundColor: 'white',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-              
-              {/* Search Button */}
-              <button style={{
-                padding: '0.875rem 1.5rem',
-                backgroundColor: '#06b6d4',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}>
-                Search
-              </button>
-              
-              {/* Filter Button */}
-              <button style={{
-                padding: '0.875rem',
-                backgroundColor: '#374151',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Filter size={20} />
-              </button>
-            </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '8px', height: '24px', background: '#00c6ff', borderRadius: '4px' }}></div>
+              Interview Categories
+            </h2>
 
-            {/* Question By Category Section */}
-            <div style={{
-              backgroundColor: 'transparent',
-              padding: '2rem',
-              boxShadow: 'none'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '2rem'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    backgroundColor: '#06b6d4',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <HelpCircle size={18} color="white" />
-                  </div>
-                  <h2 style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold',
-                    color: '#374151',
-                    margin: 0
-                  }}>
-                    Question By Category
-                  </h2>
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
+              {filteredCategories.map((category) => {
+                const isExpanded = expandedCategory === category.id;
+                const answeredCount = getAnsweredCount(category.id);
                 
-                <button style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  color: '#06b6d4',
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer'
-                }}>
-                  See all
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-              
-              {/* Category Cards */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }}>
-                {filteredCategories.map((category) => {
-                  const isExpanded = expandedCategory === category.id;
-                  const answeredCount = getAnsweredCount(category.id);
-                  
-                  return (
-                    <div key={category.id} style={{ width: '100%' }}>
-                      <div
-                        onClick={() => handleCategoryClick(category.id)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '0.75rem',
-                          backgroundColor: '#f8fafc',
-                          borderRadius: '12px',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s',
-                          transform: isExpanded ? 'scale(1.02)' : 'scale(1)'
-                        }}
-                      >
+                return (
+                  <div key={category.id} style={{ 
+                    background: 'rgba(15, 15, 15, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    boxShadow: isExpanded ? '0 0 30px rgba(0, 198, 255, 0.1)' : 'none'
+                  }}>
+                    <div
+                      onClick={() => handleCategoryClick(category.id)}
+                      style={{
+                        padding: '1.5rem 2rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        background: isExpanded ? 'rgba(0, 198, 255, 0.03)' : 'transparent',
+                        transition: 'background 0.3s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                         <div style={{
+                          width: '56px',
+                          height: '56px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          borderRadius: '16px',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '1rem',
-                          flex: 1
+                          justifyContent: 'center',
+                          fontSize: '1.75rem',
+                          border: `1px solid ${category.color}44`,
+                          position: 'relative',
+                          boxShadow: `0 0 15px ${category.color}22`
                         }}>
-                          <div style={{
-                            width: '48px',
-                            height: '48px',
-                            backgroundColor: category.color,
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '1.5rem',
-                            position: 'relative'
-                          }}>
-                            {category.icon}
-                            {answeredCount > 0 && (
-                              <div style={{
-                                position: 'absolute',
-                                top: '-5px',
-                                right: '-5px',
-                                backgroundColor: '#10b981',
-                                color: 'white',
-                                borderRadius: '50%',
-                                width: '20px',
-                                height: '20px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.75rem',
-                                fontWeight: 'bold'
-                              }}>
-                                {answeredCount}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{
-                              fontSize: '1.125rem',
-                              fontWeight: '600',
-                              color: '#374151',
-                              margin: 0,
-                              marginBottom: '0.25rem'
+                          {category.icon}
+                          {answeredCount > 0 && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '-6px',
+                              right: '-6px',
+                              backgroundColor: '#00c6ff',
+                              color: '#000',
+                              borderRadius: '50%',
+                              width: '22px',
+                              height: '22px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                              boxShadow: '0 0 10px rgba(0, 198, 255, 0.5)'
                             }}>
-                              {category.title}
-                            </h3>
-                            <p style={{
-                              color: '#6b7280',
-                              fontSize: '0.875rem',
-                              margin: 0
-                            }}>
-                              {category.description}
-                            </p>
-                          </div>
+                              {answeredCount}
+                            </div>
+                          )}
                         </div>
                         
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1rem'
-                        }}>
-                          <span style={{
-                            padding: '0.25rem 0.75rem',
-                            backgroundColor: category.color,
-                            color: 'white',
-                            borderRadius: '12px',
-                            fontSize: '0.75rem',
-                            fontWeight: '600'
-                          }}>
-                            {category.count}
-                          </span>
-                          {isExpanded ? <ChevronDown size={20} color="#9ca3af" /> : <ChevronRight size={20} color="#9ca3af" />}
+                        <div>
+                          <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: '0 0 0.25rem 0', color: '#fff' }}>
+                            {category.title}
+                          </h3>
+                          <p style={{ color: '#94a3b8', fontSize: '0.925rem', margin: 0 }}>
+                            {category.description}
+                          </p>
                         </div>
                       </div>
-
-                      {/* Expanded Questions */}
-                      {isExpanded && (
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                        <div style={{ textAlign: 'right', display: 'none' }}> {/* Optional stats */}
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Completion</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#00c6ff' }}>{Math.round((answeredCount/category.count)*100)}%</div>
+                        </div>
                         <div style={{
-                          marginTop: '0.5rem',
-                          backgroundColor: 'white',
+                          padding: '0.5rem 1rem',
+                          background: 'rgba(255, 255, 255, 0.04)',
                           borderRadius: '12px',
-                          padding: '1.5rem',
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                          animation: 'slideDown 0.3s ease-out'
+                          fontSize: '0.875rem',
+                          color: '#94a3b8',
+                          border: '1px solid rgba(255, 255, 255, 0.05)'
                         }}>
+                          {category.count} Questions
+                        </div>
+                        {isExpanded ? <ChevronDown size={22} color="#00c6ff" /> : <ChevronRight size={22} color="#94a3b8" />}
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div style={{
+                        padding: '0 2rem 2rem 2rem',
+                        animation: 'fadeInUp 0.4s ease-out'
+                      }}>
+                        <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                           {loading[category.id] ? (
-                            <div style={{ textAlign: 'center', padding: '2rem' }}>
-                              <Loader size={32} color={category.color} style={{ animation: 'spin 1s linear infinite' }} />
-                              <p style={{ marginTop: '1rem', color: '#6b7280' }}>Loading questions...</p>
+                            <div style={{ textAlign: 'center', padding: '3rem' }}>
+                              <Loader size={32} color="#00c6ff" style={{ animation: 'spin 1.5s linear infinite' }} />
+                              <p style={{ marginTop: '1rem', color: '#94a3b8' }}>Fetching curated questions...</p>
                             </div>
                           ) : (
                             categoryData[category.id]?.questions?.map((question, idx) => {
@@ -719,28 +572,32 @@ const QuestionBank = ({ onLogout }) => {
                               
                               return (
                                 <div key={idx} style={{
-                                  marginBottom: '1.5rem',
-                                  padding: '1rem',
-                                  backgroundColor: '#f9fafb',
-                                  borderRadius: '8px',
-                                  borderLeft: `4px solid ${category.color}`
+                                  padding: '1.5rem',
+                                  background: 'rgba(255, 255, 255, 0.02)',
+                                  borderRadius: '20px',
+                                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                                  transition: 'all 0.3s ease',
+                                  position: 'relative'
                                 }}>
-                                  <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'flex-start',
-                                    marginBottom: '0.75rem'
-                                  }}>
-                                    <h4 style={{
-                                      margin: 0,
-                                      fontSize: '1rem',
-                                      color: '#374151',
-                                      flex: 1
-                                    }}>
-                                      {idx + 1}. {question}
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+                                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '500', lineHeight: '1.6', color: '#f8fafc', flex: 1 }}>
+                                      <span style={{ color: '#00c6ff', marginRight: '0.75rem' }}>{idx + 1}.</span> {question}
                                     </h4>
                                     {isAnswered && (
-                                      <CheckCircle size={20} color="#10b981" />
+                                      <div style={{ 
+                                        padding: '0.4rem 0.8rem', 
+                                        backgroundColor: 'rgba(0, 198, 255, 0.1)', 
+                                        color: '#00c6ff', 
+                                        borderRadius: '10px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '700',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.4rem',
+                                        border: '1px solid rgba(0, 198, 255, 0.2)'
+                                      }}>
+                                        <CheckCircle size={14} /> COMPLETED
+                                      </div>
                                     )}
                                   </div>
                                   
@@ -748,63 +605,67 @@ const QuestionBank = ({ onLogout }) => {
                                     value={answerData?.answer || ''}
                                     onChange={(e) => handleAnswerChange(category.id, idx, e.target.value)}
                                     disabled={isAnswered}
-                                    placeholder="Type your answer here..."
+                                    placeholder="Draft your response here..."
                                     style={{
                                       width: '100%',
-                                      minHeight: '100px',
-                                      padding: '0.75rem',
-                                      border: '1px solid #d1d5db',
-                                      borderRadius: '8px',
-                                      fontSize: '0.875rem',
+                                      minHeight: '120px',
+                                      padding: '1rem',
+                                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                                      borderRadius: '14px',
+                                      color: '#cbd5e1',
+                                      fontSize: '0.95rem',
+                                      lineHeight: '1.6',
                                       resize: 'vertical',
-                                      backgroundColor: isAnswered ? '#f3f4f6' : 'white',
-                                      cursor: isAnswered ? 'not-allowed' : 'text'
+                                      outline: 'none',
+                                      transition: 'all 0.3s ease',
+                                      cursor: isAnswered ? 'default' : 'text'
                                     }}
                                   />
                                   
-                                  <div style={{
-                                    display: 'flex',
-                                    gap: '0.5rem',
-                                    marginTop: '0.75rem'
-                                  }}>
+                                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem' }}>
                                     {!isAnswered ? (
                                       <button
                                         onClick={() => handleSubmitAnswer(category.id, idx, question)}
                                         disabled={!answerData?.answer?.trim() || isAnalyzing}
                                         style={{
-                                          padding: '0.5rem 1rem',
-                                          backgroundColor: category.color,
-                                          color: 'white',
+                                          padding: '0.75rem 1.5rem',
+                                          background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                                          color: '#000',
                                           border: 'none',
-                                          borderRadius: '8px',
+                                          borderRadius: '12px',
                                           cursor: answerData?.answer?.trim() ? 'pointer' : 'not-allowed',
-                                          opacity: answerData?.answer?.trim() ? 1 : 0.5,
-                                          fontSize: '0.875rem',
-                                          fontWeight: '600'
+                                          fontSize: '0.925rem',
+                                          fontWeight: '700',
+                                          transition: 'all 0.3s ease',
+                                          boxShadow: answerData?.answer?.trim() ? '0 4px 15px rgba(0, 198, 255, 0.3)' : 'none'
                                         }}
                                       >
-                                        {isAnalyzing ? 'Analyzing...' : 'Submit Answer'}
+                                        {isAnalyzing ? 'Processing Analysis...' : 'Submit for AI Review'}
                                       </button>
                                     ) : (
                                       answerData.analyzed && (
                                         <button
                                           onClick={() => handleViewAnalysis(category.id, idx, question)}
                                           style={{
-                                            padding: '0.5rem 1rem',
-                                            backgroundColor: '#10b981',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '8px',
+                                            padding: '0.75rem 1.5rem',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                            color: '#fff',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '12px',
                                             cursor: 'pointer',
-                                            fontSize: '0.875rem',
+                                            fontSize: '0.925rem',
                                             fontWeight: '600',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.5rem'
+                                            gap: '0.6rem',
+                                            transition: 'all 0.3s ease'
                                           }}
+                                          onMouseOver={(e) => e.currentTarget.style.borderColor = '#00c6ff'}
+                                          onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
                                         >
-                                          <Eye size={16} />
-                                          View AI Analysis
+                                          <Eye size={18} color="#00c6ff" />
+                                          View Detailed AI Analysis
                                         </button>
                                       )
                                     )}
@@ -818,41 +679,44 @@ const QuestionBank = ({ onLogout }) => {
                           {answeredCount >= 5 && (
                             <div style={{
                               marginTop: '1.5rem',
-                              padding: '1rem',
-                              backgroundColor: '#f0f9ff',
-                              borderRadius: '8px',
-                              border: '2px solid #06b6d4'
+                              padding: '2rem',
+                              background: 'rgba(0, 198, 255, 0.03)',
+                              borderRadius: '24px',
+                              border: '1px dashed rgba(0, 198, 255, 0.3)',
+                              textAlign: 'center'
                             }}>
+                              <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>Ready for a Holistic Review?</h4>
+                              <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>You've completed enough questions for our AI to generate a comprehensive behavioral profile for this category.</p>
                               <button
                                 onClick={() => handleViewSummaryAnalysis(category.id)}
                                 disabled={analyzing[`${category.id}_summary`]}
                                 style={{
-                                  width: '100%',
-                                  padding: '0.75rem 1.5rem',
-                                  backgroundColor: '#06b6d4',
-                                  color: 'white',
+                                  padding: '1rem 2.5rem',
+                                  background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                                  color: '#000',
                                   border: 'none',
-                                  borderRadius: '8px',
-                                  cursor: analyzing[`${category.id}_summary`] ? 'not-allowed' : 'pointer',
+                                  borderRadius: '14px',
+                                  cursor: analyzing[`${category.id}_summary`] ? 'wait' : 'pointer',
                                   fontSize: '1rem',
-                                  fontWeight: '600',
-                                  display: 'flex',
+                                  fontWeight: '700',
+                                  display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  gap: '0.5rem'
+                                  gap: '0.75rem',
+                                  boxShadow: '0 10px 20px rgba(0, 198, 255, 0.2)'
                                 }}
                               >
-                                <Eye size={18} />
-                                {analyzing[`${category.id}_summary`] ? 'Generating Summary...' : 'View Complete Summary Analysis'}
+                                <Eye size={20} />
+                                {analyzing[`${category.id}_summary`] ? 'Generating Portrait...' : 'Unlock Category Mastery Profile'}
                               </button>
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -867,20 +731,28 @@ const QuestionBank = ({ onLogout }) => {
       />
       
       <style>{`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #1a1a1a;
+          border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #252525;
         }
       `}</style>
     </div>

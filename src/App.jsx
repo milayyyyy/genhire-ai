@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
@@ -20,6 +20,29 @@ import ProfilePage from './pages/ProfilePage';
 import PricingPage from './pages/PricingPage';
 import CategoriesPage from './pages/CategoriesPage';
 import ResetPassword from './pages/ResetPassword';
+import Faq from './pages/Faq';
+import AppInfo from './pages/AppInfo';
+import Sidebar from './components/Sidebar';
+
+// Layout component to include Sidebar globally
+const MainLayout = ({ children }) => {
+  const location = useLocation();
+  const noSidebarPages = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/email-verification', '/setup-profile'];
+  const showSidebar = !noSidebarPages.includes(location.pathname);
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000' }}>
+      {showSidebar && <Sidebar />}
+      <div style={{ 
+        flex: 1, 
+        marginLeft: showSidebar ? '280px' : '0',
+        transition: 'margin-left 0.3s ease'
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 // Wrapper components to handle navigation
 const LoginWrapper = () => {
@@ -283,30 +306,32 @@ const PricingPageWrapper = () => {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginWrapper />} />
-        <Route path="/signup" element={<SignUpWrapper />} />
-        <Route path="/forgot-password" element={<ForgotPasswordWrapper />} />
-        <Route path="/email-verification" element={<EmailVerificationWrapper />} />
-        <Route path="/setup-profile" element={<SetupProfileWrapper />} />
-        <Route path="/dashboard" element={<DashboardWrapper />} />
-        <Route path="/user-dashboard" element={<UserDashboardWrapper />} />
-        <Route path="/live-ai-interview-content-page" element={<LiveAIInterviewContentPageWrapper />} />
-        <Route path="/live-ai-interview" element={<LiveAIInterviewWrapper />} />
-        <Route path="/voice-interview" element={<VoiceInterviewWrapper />} />
-        <Route path="/interview-results" element={<InterviewResultsWrapper />} />
-        <Route path="/weakness-overview" element={<WeaknessOverviewWrapper />} />
-        <Route path="/my-plan" element={<MyPlanWrapper />} />
-        <Route path="/settings" element={<SettingsPageWrapper />} />
-        <Route path="/question-bank" element={<QuestionBankWrapper />} />
-        <Route path="/profile" element={<ProfilePageWrapper />} />
-        <Route path="/pricing" element={<PricingPageWrapper />} />
-        <Route path="/categories" element={<CategoriesPage />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/signup" element={<SignUpWrapper />} />
+          <Route path="/forgot-password" element={<ForgotPasswordWrapper />} />
+          <Route path="/email-verification" element={<EmailVerificationWrapper />} />
+          <Route path="/setup-profile" element={<SetupProfileWrapper />} />
+          <Route path="/dashboard" element={<DashboardWrapper />} />
+          <Route path="/user-dashboard" element={<UserDashboardWrapper />} />
+          <Route path="/live-ai-interview-content-page" element={<LiveAIInterviewContentPageWrapper />} />
+          <Route path="/live-ai-interview" element={<LiveAIInterviewWrapper />} />
+          <Route path="/voice-interview" element={<VoiceInterviewWrapper />} />
+          <Route path="/interview-results" element={<InterviewResultsWrapper />} />
+          <Route path="/weakness-overview" element={<WeaknessOverviewWrapper />} />
+          <Route path="/my-plan" element={<MyPlanWrapper />} />
+          <Route path="/settings" element={<SettingsPageWrapper />} />
+          <Route path="/question-bank" element={<QuestionBankWrapper />} />
+          <Route path="/profile" element={<ProfilePageWrapper />} />
+          <Route path="/pricing" element={<PricingPageWrapper />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </MainLayout>
     </Router>
   );
 }

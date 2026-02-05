@@ -1,224 +1,307 @@
-import React, { useState } from 'react';
-import { Mail, ArrowLeft } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import React, { useState, useEffect, useRef } from 'react';
+import { Mail, ArrowLeft, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
+import { useAuth } from '../contexts/AuthContext';
 
 const ForgotPassword = ({ onBackToLogin }) => {
   const [email, setEmail] = useState('');
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const canvasRef = useRef(null);
+  const { resetPassword } = useAuth();
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const particles = [];
+    const particleCount = 100;
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 2;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.5)';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.15 * (1 - dist / 150)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setMessage('');
+    setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
+      const { error } = await resetPassword(email);
       if (error) throw error;
-
-      setMessage('Password reset email sent! Please check your inbox.');
+      setMessage('Check your email for instructions');
     } catch (err) {
-      setError(err.message || 'Error sending reset email');
+      setError(err.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-    <div style={{
+    <div style={{ 
       height: '100vh',
       width: '100vw',
       display: 'flex',
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: "'Inter', sans-serif",
       margin: 0,
       padding: 0,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      backgroundColor: '#000',
+      position: 'relative'
     }}>
-      {/* Left side - Background Image, nindot nga background */}
-      <div className="hidden lg:block lg:w-1/2 h-screen relative overflow-hidden">
-        <img
-          src="https://images.pexels.com/photos/3874038/pexels-photo-3874038.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-          alt="Two people having a conversation"
-          className="w-full h-full object-cover"
-        />
-        <div style={{
+      <canvas
+        ref={canvasRef}
+        style={{
           position: 'absolute',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.2)'
-        }}></div>
-      </div>
+          width: '100%',
+          height: '100%',
+          zIndex: 1,
+          opacity: 0.8
+        }}
+      />
 
-      {/* Right side - Forgot Password Form, diri ang form */}
-      <div className="w-full lg:w-1/2 h-screen flex items-center justify-center p-8 bg-white relative box-border">
-        {/* Back to Login - Top Right Corner, balik sa login */}
-        <button
-          onClick={onBackToLogin}
-          style={{
-            position: 'absolute',
-            top: '2rem',
-            right: '2rem',
-            display: 'flex',
-            alignItems: 'center',
-            background: 'none',
-            border: 'none',
-            color: '#6b7280',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            padding: '0.5rem'
-          }}
-        >
-          <ArrowLeft size={16} style={{ marginRight: '0.5rem' }} />
-          Back to Login
-        </button>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes shine {
+          to { background-position: 200% center; }
+        }
+        .shiny-title {
+          background: linear-gradient(to right, #fff 20%, #00c6ff 50%, #fff 80%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shine 5s linear infinite;
+        }
+      `}} />
 
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 10
+      }}>
         <div style={{
           width: '100%',
-          maxWidth: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
+          maxWidth: '480px',
+          padding: '2.5rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '24px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          margin: '1.5rem'
         }}>
-          {/* Chat Icon - logo sa chat */}
-          <div style={{
-            marginBottom: '2rem'
-          }}>
-            <ChatBubbleLogo size={64} />
-          </div>
-
-          {/* Messages */}
-          {message && (
-            <div style={{
-              width: '100%',
-              padding: '0.75rem',
-              backgroundColor: '#d1fae5',
-              color: '#065f46',
-              borderRadius: '0.5rem',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-              textAlign: 'center'
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h1 className="shiny-title" style={{
+              fontSize: '2.5rem',
+              fontWeight: '800',
+              marginBottom: '0.75rem',
+              letterSpacing: '-0.02em'
             }}>
-              {message}
-            </div>
-          )}
-
-          {error && (
-            <div style={{
-              width: '100%',
-              padding: '0.75rem',
-              backgroundColor: '#fee2e2',
-              color: '#dc2626',
-              borderRadius: '0.5rem',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-              textAlign: 'center'
-            }}>
-              {error}
-            </div>
-          )}
-
-          {/* Title and Description - titulo ug description */}
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '2.5rem'
-          }}>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '1rem'
-            }}>
-              Forgot Password
+              Recovery
             </h1>
             <p style={{
-              color: '#6b7280',
+              color: '#94a3b8',
               fontSize: '1rem',
-              lineHeight: '1.6',
-              maxWidth: '320px'
+              lineHeight: '1.6'
             }}>
-              Enter your email address below, and we'll send you a link to reset your password.
+              Enter your email for reset instructions.
             </p>
           </div>
 
-          {/* Reset Password Form - form para sa reset */}
-          <form onSubmit={handleSubmit} style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.5rem'
-          }}>
-            {/* Email Input */}
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                position: 'absolute',
-                left: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none'
-              }}>
-                <Mail size={20} color="#9ca3af" />
+          {message ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', color: '#00c6ff' }}>
+                <CheckCircle2 size={64} />
               </div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email address"
+              <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>Check your email</div>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+                We've sent reset instructions to <br/><span style={{ color: '#fff', fontWeight: '500' }}>{email}</span>
+              </p>
+              <button
+                onClick={onBackToLogin}
                 style={{
                   width: '100%',
-                  paddingLeft: '3rem',
-                  paddingRight: '1rem',
-                  paddingTop: '1rem',
-                  paddingBottom: '1rem',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.75rem',
-                  outline: 'none',
+                  padding: '1.1rem',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  color: '#fff',
                   fontSize: '1rem',
-                  color: '#111827',
-                  boxSizing: 'border-box'
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
                 }}
-                required
-              />
+              >
+                Back to Login
+              </button>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', zIndex: 1, color: '#64748b' }}>
+                  <Mail size={18} />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email address"
+                  style={{
+                    width: '100%',
+                    padding: '1.1rem 1rem 1.1rem 3.5rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '16px',
+                    outline: 'none',
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    transition: 'all 0.2s'
+                  }}
+                  required
+                />
+              </div>
 
-            {/* Reset Password Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                backgroundColor: loading ? '#9ca3af' : '#06b6d4',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.75rem',
-                fontSize: '1rem',
-                fontWeight: '500',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#0891b2')}
-              onMouseOut={(e) => !loading && (e.target.style.backgroundColor = '#06b6d4')}
-            >
-              {loading ? 'Sending...' : 'Reset Password'}
-            </button>
-          </form>
+              {error && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#ff4d4d', backgroundColor: 'rgba(255, 77, 77, 0.05)', padding: '1rem', borderRadius: '12px', fontSize: '0.85rem', border: '1px solid rgba(255, 77, 77, 0.1)' }}>
+                  <AlertCircle size={16} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '1.1rem',
+                  background: 'linear-gradient(to right, #00c6ff, #0072ff)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '16px',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  boxShadow: '0 8px 30px rgba(0, 198, 255, 0.2)',
+                  transition: 'all 0.3s'
+                }}
+              >
+                {loading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+
+              <button
+                type="button"
+                onClick={onBackToLogin}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  fontSize: '0.95rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  transition: 'color 0.2s'
+                }}
+              >
+                <ArrowLeft size={16} />
+                Back to Sign In
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>
-    </>
   );
 };
 
 export default ForgotPassword;
+
 

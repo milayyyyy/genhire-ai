@@ -223,7 +223,7 @@ export default function Home() {
           top: 0;
           left: 0;
           width: 100vw;
-          height: 100vh;
+          height: 105vh;
           object-fit: cover;
           z-index: 0;
         }
@@ -1020,6 +1020,17 @@ export default function Home() {
           className="spline-viewer"
           url="https://prod.spline.design/quvdRztMSPYuwcrL/scene.splinecode"
         ></spline-viewer>
+        
+        {/* Mask to cover Spline logo */}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          right: 0,
+          width: '150px',
+          height: '50px',
+          backgroundColor: '#000',
+          zIndex: 1
+        }}></div>
 
         {/* Mobile Background Fallback */}
         <div className="mobile-background"></div>

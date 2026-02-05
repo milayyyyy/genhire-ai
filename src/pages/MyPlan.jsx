@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -8,45 +8,108 @@ import {
   CreditCard,
   User,
   Settings,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  Award,
+  Calendar,
+  DollarSign,
+  CheckCircle2,
+  Lock,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  Star
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
+import { useAuth } from '../contexts/AuthContext';
 
 const MyPlan = ({ onLogout }) => {
   const navigate = useNavigate();
+  const { user, userProfile } = useAuth();
+  const canvasRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+
+  // Derive plan info dynamically
+  const planName = userProfile?.subscription_plan || 'Free';
+  const isPremium = planName.toLowerCase() !== 'free';
+  const planDisplay = planName.charAt(0).toUpperCase() + planName.slice(1);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    const particles = [];
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        size: Math.random() * 2
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 198, 255, 0.4)';
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.08)';
+
+      particles.forEach((p, i) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dist = Math.sqrt((p.x - p2.x) ** 2 + (p.y - p2.y) ** 2);
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      });
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   const handleNavigation = (itemId) => {
-    switch (itemId) {
-      case 'dashboard':
-        navigate('/user-dashboard');
-        break;
-      case 'live-interview':
-        navigate('/live-ai-interview-content-page');
-        break;
-      case 'past-interviews':
-        navigate('/weakness-overview');
-        break;
-      case 'question-bank':
-        navigate('/question-bank');
-        break;
-      case 'subscriptions':
-        navigate('/my-plan');
-        break;
-      case 'profile':
-        navigate('/profile');
-        break;
-      case 'settings':
-        navigate('/settings');
-        break;
-      default:
-        break;
-    }
+    const routes = {
+      dashboard: '/user-dashboard',
+      'live-interview': '/live-ai-interview',
+      'past-interviews': '/weakness-overview',
+      'question-bank': '/question-bank',
+      subscriptions: '/my-plan',
+      profile: '/profile',
+      settings: '/settings'
+    };
+    if (routes[itemId]) navigate(routes[itemId]);
   };
 
   const sidebarItems = [
     { id: 'dashboard', icon: Home, label: 'Dashboard' },
     { id: 'past-interviews', icon: Clock, label: 'Past Interviews' },
-    { id: 'live-interview', icon: Zap, label: 'Live AI Interview' },
+    { id: 'live-interview', icon: Zap, label: 'Live Interview' },
     { id: 'question-bank', icon: HelpCircle, label: 'Question Bank' },
     { id: 'subscriptions', icon: CreditCard, label: 'Subscriptions' },
     { id: 'profile', icon: User, label: 'Profile' },
@@ -57,518 +120,245 @@ const MyPlan = ({ onLogout }) => {
     <div style={{
       display: 'flex',
       height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      background: '#000',
+      color: '#fff',
+      fontFamily: "'Inter', sans-serif",
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      {/* Sidebar - nindot nga sidebar */}
-      <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        {/* Dark overlay for sidebar */}
-        <div style={{
-          position: 'absolute',
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 1,
+          opacity: 0.6
+        }}
+      />
 
-        {/* Sidebar content wrapper */}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
+      {/* Main Content */}
+      <div style={{
+        flex: 1,
+        position: 'relative',
+        zIndex: 2,
+        height: '100vh',
+        overflowY: 'auto',
+        background: 'transparent'
+      }}>
+        {/* Sticky Header */}
+        <header style={{
+          position: 'sticky',
+          top: 0,
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          padding: '1rem 2.5rem',
           display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 100
         }}>
-          {/* Logo Section - logo sa GenHire AI */}
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
+          <div>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: '#fff' }}>Subscriptions</h2>
+            <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>Plan & Billing Management</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{user?.displayName || 'User'}</div>
+              <div style={{ fontSize: '0.7rem', color: '#00c6ff' }}>Premium Member</div>
+            </div>
             <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(45deg, #00c6ff, #0072ff)',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.75rem'
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(0, 198, 255, 0.3)'
             }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
           </div>
+        </header>
 
-          {/* Navigation - mga navigation items */}
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'subscriptions'; // Subscriptions is active
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content - my plan interface */}
-      <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
-        height: '100vh',
-        overflow: 'auto'
-      }}>
-        <div style={{
-          flex: 1,
-          backgroundColor: '#f9fafb',
-          minHeight: '100vh'
-        }}>
-          {/* Header Section */}
+        <div style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Current Plan Card */}
           <div style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
+            background: 'linear-gradient(135deg, rgba(0, 198, 255, 0.1) 0%, rgba(0, 114, 255, 0.05) 100%)',
+            border: '1px solid rgba(0, 198, 255, 0.2)',
+            borderRadius: '32px',
+            padding: '2.5rem',
+            marginBottom: '3rem',
             position: 'relative',
-            paddingTop: '3rem',
-            paddingBottom: '6rem',
-            color: 'white',
-            textAlign: 'center'
+            overflow: 'hidden'
           }}>
-
-
-            {/* Header content */}
             <div style={{
-              position: 'relative',
-              zIndex: 2,
-              maxWidth: '800px',
-              margin: '0 auto',
-              padding: '0 2rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2rem'
-            }}>
-              {/* Bill Icon */}
-              <div style={{
-                flexShrink: 0
+              position: 'absolute',
+              top: '-50px',
+              right: '-50px',
+              width: '200px',
+              height: '200px',
+              background: 'rgba(0, 198, 255, 0.1)',
+              filter: 'blur(60px)',
+              borderRadius: '50%'
+            }} />
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+              <div style={{ 
+                width: '100px', 
+                height: '100px', 
+                background: 'linear-gradient(45deg, #00c6ff, #0072ff)',
+                borderRadius: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 20px 40px rgba(0, 198, 255, 0.2)'
               }}>
-                <svg width="120" height="120" viewBox="0 0 100 100" fill="none">
-                  {/* Bill/Receipt Background */}
-                  <rect x="20" y="15" width="50" height="70" rx="4" fill="white" opacity="0.9" />
-                  <rect x="25" y="20" width="40" height="3" rx="1.5" fill="#06b6d4" />
-                  <rect x="25" y="28" width="30" height="2" rx="1" fill="#94a3b8" />
-                  <rect x="25" y="33" width="35" height="2" rx="1" fill="#94a3b8" />
-                  <rect x="25" y="38" width="25" height="2" rx="1" fill="#94a3b8" />
-
-                  {/* Dollar Sign */}
-                  <circle cx="65" cy="25" r="12" fill="#fbbf24" />
-                  <text x="65" y="31" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">$</text>
-
-                  {/* Calendar/Grid */}
-                  <rect x="15" y="45" width="25" height="20" rx="2" fill="#8b5cf6" opacity="0.8" />
-                  <line x1="18" y1="50" x2="37" y2="50" stroke="white" strokeWidth="1" />
-                  <line x1="18" y1="55" x2="37" y2="55" stroke="white" strokeWidth="1" />
-                  <line x1="18" y1="60" x2="37" y2="60" stroke="white" strokeWidth="1" />
-                  <line x1="22" y1="47" x2="22" y2="63" stroke="white" strokeWidth="1" />
-                  <line x1="27" y1="47" x2="27" y2="63" stroke="white" strokeWidth="1" />
-                  <line x1="32" y1="47" x2="32" y2="63" stroke="white" strokeWidth="1" />
-                </svg>
+                <Award size={48} color="white" />
               </div>
-
-              {/* Text content */}
-              <div style={{ textAlign: 'left' }}>
-                <h1 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  margin: 0,
-                  marginBottom: '0.75rem'
-                }}>
-                  My Plan
-                </h1>
-
-                <p style={{
-                  fontSize: '1.125rem',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: 0,
-                  lineHeight: '1.5'
-                }}>
-                  Manage your subscription plans and billing details here. View your current plan, track billing history, and make changes such as upgrading, downgrading, or canceling your subscription anytime.
+              
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                  <h3 style={{ fontSize: '2rem', fontWeight: '800', margin: 0 }}>{planDisplay} Plan</h3>
+                  <span style={{ 
+                    padding: '4px 12px', 
+                    background: isPremium ? 'rgba(0, 198, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)', 
+                    border: `1px solid ${isPremium ? '#00c6ff' : 'rgba(255, 255, 255, 0.2)'}`,
+                    borderRadius: '100px',
+                    fontSize: '0.75rem',
+                    fontWeight: '700',
+                    color: isPremium ? '#00c6ff' : '#94a3b8'
+                  }}>{isPremium ? 'ACTIVE' : 'BASIC'}</span>
+                </div>
+                <p style={{ fontSize: '1.1rem', color: '#94a3b8', margin: 0, maxWidth: '500px' }}>
+                  {isPremium 
+                    ? 'Enjoy unlimited AI interviews and advanced career analytics to land your dream job.'
+                    : 'Get started with limited AI interviews and basic performance tracking.'}
                 </p>
               </div>
+
+              <div style={{
+                background: 'rgba(0, 0, 0, 0.2)',
+                padding: '1.5rem 2rem',
+                borderRadius: '24px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                  <Calendar size={14} /> Account Created
+                </div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700' }}>{userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString() : 'N/A'}</div>
+              </div>
             </div>
           </div>
 
-          {/* Content Area */}
-          <div style={{
-            maxWidth: '1000px',
-            margin: '0 auto',
-            padding: '2rem',
-            marginTop: '-3rem',
-            position: 'relative',
-            zIndex: 3
-          }}>
-            {/* Current Subscription Section */}
+          {/* Features Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '24px',
+              padding: '2rem'
             }}>
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#374151',
-                margin: 0,
-                marginBottom: '1.5rem'
-              }}>
-                Current Subscription
-              </h2>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                padding: '1.5rem',
-                backgroundColor: '#f8fafc',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0'
-              }}>
-                {/* Plan Icon */}
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  backgroundColor: '#fbbf24',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative'
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  {/* Ribbon */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '-8px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '40px',
-                    height: '16px',
-                    backgroundColor: '#ef4444',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{ fontSize: '8px', color: 'white', fontWeight: 'bold' }}>✓</span>
-                  </div>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', color: '#00c6ff' }}>Plan Status</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Current Plan</span>
+                  <span style={{ fontWeight: '600' }}>{planDisplay}</span>
                 </div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <h3 style={{
-                      fontSize: '1.25rem',
-                      fontWeight: '600',
-                      color: '#06b6d4',
-                      margin: 0
-                    }}>
-                      GenHire AI Monthly
-                    </h3>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      backgroundColor: '#10b981',
-                      color: 'white',
-                      borderRadius: '12px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600'
-                    }}>
-                      Active
-                    </span>
-                  </div>
-                  <p style={{
-                    color: '#6b7280',
-                    fontSize: '0.875rem',
-                    margin: 0
-                  }}>
-                    Next billing date in 11th of March 2025
-                  </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Price</span>
+                  <span style={{ fontWeight: '600' }}>{isPremium ? 'PHP 399.00/mo' : 'Free'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Status</span>
+                  <span style={{ color: '#22c55e', fontWeight: '600' }}>Active</span>
                 </div>
               </div>
             </div>
 
-            {/* Payment Method Section */}
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '24px',
+              padding: '2rem'
             }}>
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#374151',
-                margin: 0,
-                marginBottom: '1.5rem'
-              }}>
-                Payment Method
-              </h2>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '1.5rem',
-                backgroundColor: '#f8fafc',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem'
-                }}>
-                  {/* GCash Icon */}
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid #e5e7eb'
-                  }}>
-                    <img
-                      src="https://images.seeklogo.com/logo-png/38/1/gcash-logo-png_seeklogo-383190.png"
-                      alt="GCash Logo"
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        objectFit: 'contain'
-                      }}
-                    />
+              <h4 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Usage Metrics</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                    <span style={{ color: '#64748b' }}>AI Interviews</span>
+                    <span style={{ fontWeight: '600' }}>Unlimited</span>
                   </div>
-
-                  <div>
-                    <h3 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#374151',
-                      margin: 0,
-                      marginBottom: '0.25rem'
-                    }}>
-                      GCash
-                    </h3>
-                    <p style={{
-                      color: '#6b7280',
-                      fontSize: '0.875rem',
-                      margin: 0
-                    }}>
-                      ••••••••09
-                    </p>
+                  <div style={{ width: '100%', height: '6px', background: 'rgba(0,198,255,0.1)', borderRadius: '3px', position: 'relative' }}>
+                    <div style={{ width: '100%', height: '100%', background: '#00c6ff', borderRadius: '3px' }} />
                   </div>
                 </div>
-
-                <button style={{
-                  padding: '0.5rem 1.5rem',
-                  backgroundColor: 'white',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}>
-                  Change
-                </button>
-              </div>
-            </div>
-
-            {/* Billing History Section */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '1.5rem'
-              }}>
-                <h2 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  margin: 0
-                }}>
-                  Billing History
-                </h2>
-                <button style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  color: '#06b6d4',
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer'
-                }}>
-                  See all
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                padding: '1.5rem',
-                backgroundColor: '#f8fafc',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0'
-              }}>
-                {/* Date Icon */}
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  backgroundColor: '#06b6d4',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <span style={{ color: 'white', fontSize: '1.25rem', fontWeight: 'bold' }}>11</span>
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    marginBottom: '0.25rem'
-                  }}>
-                    <h3 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#06b6d4',
-                      margin: 0
-                    }}>
-                      February 11, 2025
-                    </h3>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      backgroundColor: '#10b981',
-                      color: 'white',
-                      borderRadius: '12px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600'
-                    }}>
-                      Paid
-                    </span>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                    <span style={{ color: '#64748b' }}>Questions Bank Access</span>
+                    <span style={{ fontWeight: '600' }}>100%</span>
                   </div>
-                  <p style={{
-                    color: '#6b7280',
-                    fontSize: '0.875rem',
-                    margin: 0
-                  }}>
-                    PHP 399.00 via GCash
-                  </p>
+                  <div style={{ width: '100%', height: '6px', background: 'rgba(0,198,255,0.1)', borderRadius: '3px', position: 'relative' }}>
+                    <div style={{ width: '100%', height: '100%', background: '#00c6ff', borderRadius: '3px' }} />
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Action Buttons */}
-            <div style={{
+          {/* Quick Actions */}
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button style={{
+              flex: 1,
+              minWidth: '200px',
+              padding: '1rem',
+              background: 'linear-gradient(45deg, #00c6ff, #0072ff)',
+              border: 'none',
+              borderRadius: '16px',
+              color: 'white',
+              fontWeight: '700',
+              cursor: 'pointer',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 10px 20px rgba(0, 198, 255, 0.2)'
             }}>
-              <button style={{
-                width: '100%',
-                padding: '1rem 2rem',
-                backgroundColor: 'white',
-                color: '#374151',
-                border: '1px solid #d1d5db',
-                borderRadius: '12px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}>
-                Change Plan
-              </button>
-
-              <button style={{
-                width: '100%',
-                padding: '1rem 2rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}>
-                Cancel Subscription
-              </button>
-            </div>
+              <TrendingUp size={18} /> Upgrade Plan
+            </button>
+            <button style={{
+              flex: 1,
+              minWidth: '200px',
+              padding: '1rem',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '16px',
+              color: 'white',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}>
+              Billing History
+            </button>
+            <button style={{
+              flex: 0.5,
+              minWidth: '150px',
+              padding: '1rem',
+              background: 'transparent',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '16px',
+              color: '#ef4444',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}>
+              Cancel Plan
+            </button>
           </div>
         </div>
       </div>

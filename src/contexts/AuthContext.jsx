@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+/* @refresh reload */
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
 const AuthContext = createContext({});
@@ -11,28 +12,46 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
+    let mounted = true;
+
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          const currentUser = session?.user ?? null;
+          setUser(currentUser);
+          setLoading(false); // Unblock UI as soon as session is known
+          
+          if (currentUser) {
+            fetchUserProfile(currentUser.id); // Fetch profile in background
+          }
+        }
+      } catch (err) {
+        console.error('Session check error:', err);
+        if (mounted) setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (mounted) {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        
+        if (currentUser) {
+          fetchUserProfile(currentUser.id);
+        } else {
+          setUserProfile(null);
+        }
         setLoading(false);
       }
     });
 
-    // Listen for changes on auth state (sign in, sign out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId) => {
@@ -41,7 +60,7 @@ export const AuthProvider = ({ children }) => {
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
@@ -50,8 +69,6 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('Unexpected error fetching profile:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -85,8 +102,26 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <div style={{ 
+          height: '100vh', 
+          width: '100vw', 
+          backgroundColor: '#000', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center'
+        }}>
+          <div style={{ 
+            width: '30px', 
+            height: '30px', 
+            border: '2px solid rgba(0, 198, 255, 0.1)', 
+            borderTopColor: '#00c6ff', 
+            borderRadius: '50%', 
+            animation: 'spin 0.6s linear infinite'
+          }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      ) : children}
     </AuthContext.Provider>
   );
 };
-

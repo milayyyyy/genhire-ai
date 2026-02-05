@@ -11,6 +11,20 @@ const getTodayDate = () => {
   return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 };
 
+export const fetchCategories = async () => {
+  const { data, error } = await supabase
+    .from('question_categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+  
+  if (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+  return data;
+};
+
 export const fetchQuestionsFromAPI = async (category) => {
   const response = await fetch(API_ENDPOINTS[category]);
   const data = await response.json();

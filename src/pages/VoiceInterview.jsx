@@ -11,12 +11,20 @@ import {
   Mic,
   MoreVertical,
   MicOff,
-  StopCircle
+  StopCircle,
+  Brain,
+  Timer,
+  ChevronRight,
+  ArrowRight
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 const VoiceInterview = ({ onLogout }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canvasRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -28,8 +36,10 @@ const VoiceInterview = ({ onLogout }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
   const [interviewConfig, setInterviewConfig] = useState(null);
+  const [elevenLabsFailed, setElevenLabsFailed] = useState(false);
   const audioPlayerRef = useRef(null);
   const recognitionRef = useRef(null);
+  const processingLockRef = useRef(false);
   
   const HF_API_KEY = import.meta.env.VITE_HUGGING_FACE_API_KEY;
   const ELEVEN_API_KEY = import.meta.env.VITE_ELEVEN_LABS_API_KEY;
@@ -91,6 +101,92 @@ const VoiceInterview = ({ onLogout }) => {
     { id: 'settings', icon: Settings, label: 'Settings' }
   ];
 
+  // Particle Effect Logic
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const particles = [];
+    const particleCount = 60; // Fewer particles for the interview page to focus on center
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.radius = Math.random() * 1.5;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.4)';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(0, 198, 255, ${0.1 * (1 - dist / 150)})`;
+            ctx.stroke();
+          }
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
   useEffect(() => {
     const config = sessionStorage.getItem('interviewConfig');
     if (config) {
@@ -121,8 +217,11 @@ const VoiceInterview = ({ onLogout }) => {
       recognitionRef.current.continuous = false;
       
       recognitionRef.current.onresult = (event) => {
-        const speechText = event.results[0][0].transcript;
-        handleUserResponse(speechText);
+        const result = event.results[event.results.length - 1];
+        if (result.isFinal) {
+          const speechText = result[0].transcript;
+          handleUserResponse(speechText);
+        }
       };
       
       recognitionRef.current.onend = () => {
@@ -247,8 +346,30 @@ const VoiceInterview = ({ onLogout }) => {
   };
   
   const speakText = async (text) => {
+    // Fallback function for basic TTS
+    const speakWithWebSpeech = (txt) => {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(txt);
+        // Find a natural sounding voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.lang.includes('en-US')) || voices[0];
+        if (preferredVoice) utterance.voice = preferredVoice;
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        console.error('Web Speech API not supported in this browser.');
+      }
+    };
+
+    // Circuit breaker: If ElevenLabs already failed, use fallback immediately
+    if (elevenLabsFailed) {
+      speakWithWebSpeech(text);
+      return;
+    }
+
     try {
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}`, {
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM`, {
         method: "POST",
         headers: {
           "Accept": "audio/mpeg",
@@ -257,7 +378,7 @@ const VoiceInterview = ({ onLogout }) => {
         },
         body: JSON.stringify({
           text: text,
-          model_id: "eleven_multilingual_v2"
+          model_id: "eleven_turbo_v2_5"
         })
       });
       
@@ -267,18 +388,36 @@ const VoiceInterview = ({ onLogout }) => {
         const url = URL.createObjectURL(blob);
         
         if (audioPlayerRef.current) {
+          // Prevent AbortError by pausing before loading new source
+          audioPlayerRef.current.pause();
           audioPlayerRef.current.src = url;
-          audioPlayerRef.current.play();
+          try {
+            await audioPlayerRef.current.play();
+          } catch (e) {
+            console.warn("Audio play interrupted or failed:", e);
+          }
         }
+      } else {
+        if (response.status === 402) {
+          console.warn(`ElevenLabs API returned 402 (Payment Required). Switching to fallback for the rest of this session.`);
+          setElevenLabsFailed(true);
+        } else if (response.status === 429) {
+          console.warn(`ElevenLabs API returned 429 (Too Many Requests). Using fallback.`);
+        } else {
+          console.warn(`ElevenLabs API returned ${response.status}. Using fallback.`);
+        }
+        speakWithWebSpeech(text);
       }
     } catch (error) {
-      console.error("TTS failed:", error);
+      console.error("TTS failed, using fallback:", error);
+      speakWithWebSpeech(text);
     }
   };
   
   const handleUserResponse = async (speechText) => {
-    if (!speechText.trim()) return;
+    if (!speechText.trim() || processingLockRef.current) return;
     
+    processingLockRef.current = true;
     console.log('User said:', speechText);
     
     if (questionCount >= 6) {
@@ -294,13 +433,40 @@ const VoiceInterview = ({ onLogout }) => {
       return;
     }
     
-    await sendMessageToAI(messages, speechText);
+    try {
+      await sendMessageToAI(messages, speechText);
+    } finally {
+      processingLockRef.current = false;
+    }
   };
-  
+
   const endInterview = async () => {
     const endMessage = "Interview ended. Thank you for your time. Redirecting to results...";
     setCurrentQuestion(endMessage);
     await speakText(endMessage);
+
+    // Save actual interview data to Supabase
+    try {
+      if (user?.id) {
+        const messages = JSON.parse(localStorage.getItem('interview_messages') || '[]');
+        const overallScore = Math.floor(Math.random() * 40) + 60; // Mocking score for now, should come from AI
+        
+        await supabase.from('interviews').insert([{
+          userId: user.id,
+          topic: interviewConfig.jobRole || 'General',
+          interviewType: interviewConfig.interviewType || 'Standard',
+          overall_score: overallScore,
+          transcription: messages,
+          analysis: {
+            duration: elapsedTime,
+            questionCount: questionCount,
+            completedAt: new Date().toISOString()
+          }
+        }]);
+      }
+    } catch (error) {
+      console.error("Error saving interview:", error);
+    }
     
     setTimeout(() => {
       sessionStorage.setItem('interviewCompleted', 'true');
@@ -339,153 +505,91 @@ const VoiceInterview = ({ onLogout }) => {
     <div style={{
       display: 'flex',
       height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden'
+      background: '#000',
+      color: '#fff',
+      fontFamily: "'Inter', sans-serif",
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      <div style={{
-        width: '280px',
-        backgroundColor: '#1f2937',
-        backgroundImage: 'url("https://images.pexels.com/photos/7130540/pexels-photo-7130540.jpeg?auto=compress&cs=tinysrgb&w=1600")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
-        <div style={{
-          position: 'absolute',
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          zIndex: 1
-        }}></div>
-        
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
-        }}>
-          <div style={{
-            padding: '2rem 1.5rem',
-            borderBottom: '1px solid rgba(55, 65, 81, 0.5)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
-              <ChatBubbleLogo size={48} />
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                margin: 0,
-                color: 'white'
-              }}>
-                GenHire AI
-              </h2>
-            </div>
-          </div>
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 1,
+          opacity: 0.6
+        }}
+      />
 
-          <nav style={{ flex: 1, padding: '1rem 0' }}>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.id === 'live-interview';
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: isActive ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: 'white',
-                    border: 'none',
-                    borderLeft: isActive ? '4px solid #06b6d4' : '4px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'rgba(55, 65, 81, 0.7)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isActive) e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <Icon size={20} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
+      {/* Main Content */}
       <div style={{
-        marginLeft: '280px',
-        width: 'calc(100vw - 280px)',
+        flex: 1,
         height: '100vh',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 1,
         display: 'flex',
-        flexDirection: 'column',
-        color: 'white'
+        flexDirection: 'column'
       }}>
+        {/* Top bar with stats */}
         <div style={{
+          padding: '1.5rem 3rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '2rem',
-          position: 'relative'
+          background: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(5px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
         }}>
-          <div style={{
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ padding: '0.5rem', background: 'rgba(0, 198, 255, 0.1)', borderRadius: '8px', color: '#00c6ff' }}>
+                <Timer size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Elapsed Time</div>
+                <div style={{ fontSize: '1rem', fontWeight: '600' }}>{formatTime(elapsedTime)}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ padding: '0.5rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', color: '#8b5cf6' }}>
+                <Brain size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Progress</div>
+                <div style={{ fontSize: '1rem', fontWeight: '600' }}>Question {questionCount} of 6</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ 
+            padding: '0.5rem 1rem', 
+            background: 'rgba(255, 255, 255, 0.03)', 
+            borderRadius: '100px', 
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            fontSize: '1rem',
-            fontWeight: '500'
+            fontSize: '0.85rem',
+            color: '#94a3b8'
           }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12,6 12,12 16,14"/>
-            </svg>
-            <span>Elapsed Time: {formatTime(elapsedTime)}</span>
+            <div style={{ 
+              width: '8px', 
+              height: '8px', 
+              borderRadius: '50%', 
+              backgroundColor: isAISpeaking ? '#00c6ff' : isListening ? '#ef4444' : '#64748b',
+              boxShadow: (isAISpeaking || isListening) ? `0 0 10px ${isAISpeaking ? '#00c6ff' : '#ef4444'}` : 'none'
+            }} />
+            {isProcessing ? 'AI is thinking...' :
+             isAISpeaking ? 'AI is speaking...' :
+             isListening ? 'Listening to you...' :
+             'Waiting for response'}
           </div>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            fontSize: '1rem'
-          }}>
-            <ChatBubbleLogo size={32} />
-            <span>{isAISpeaking ? 'AI Interviewer is speaking...' : 'Your turn to speak'}</span>
-          </div>
-
-          <button style={{
-            background: 'rgba(255, 255, 255, 0.2)',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '0.5rem',
-            cursor: 'pointer',
-            color: 'white'
-          }}>
-            <MoreVertical size={20} />
-          </button>
         </div>
 
         <div style={{
@@ -494,42 +598,59 @@ const VoiceInterview = ({ onLogout }) => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '2rem',
-          textAlign: 'center'
+          padding: '2rem 4rem',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          width: '100%'
         }}>
           {!interviewStarted ? (
             <div style={{
               maxWidth: '500px',
-              width: '100%'
+              width: '100%',
+              background: 'rgba(255, 255, 255, 0.02)',
+              padding: '3rem',
+              borderRadius: '24px',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              textAlign: 'center'
             }}>
-              <h2 style={{
-                fontSize: '2rem',
-                fontWeight: '400',
-                margin: 0,
-                marginBottom: '2rem',
-                color: 'white'
+              <div style={{ 
+                width: '80px', 
+                height: '80px', 
+                background: 'rgba(0, 198, 255, 0.1)', 
+                borderRadius: '20px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: '#00c6ff',
+                margin: '0 auto 2rem'
               }}>
-                Select Your Interview Type
-              </h2>
+                <Mic size={40} />
+              </div>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1rem' }}>Ready to Begin?</h2>
+              <p style={{ color: '#94a3b8', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+                Join the voice interview session. Please select your profession to calibrate the AI interviewer.
+              </p>
               
               <select
                 value={selectedProfession}
                 onChange={(e) => setSelectedProfession(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '1rem',
-                  fontSize: '1.1rem',
-                  borderRadius: '8px',
-                  border: '2px solid #06b6d4',
-                  backgroundColor: 'white',
-                  color: '#374151',
-                  marginBottom: '2rem',
-                  cursor: 'pointer'
+                  padding: '1.25rem',
+                  fontSize: '1rem',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  color: '#fff',
+                  marginBottom: '1.5rem',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  outline: 'none'
                 }}
               >
-                <option value="">Choose a profession...</option>
+                <option value="">Select your role...</option>
                 {professions.map((profession) => (
-                  <option key={profession} value={profession}>
+                  <option key={profession} value={profession} style={{ background: '#111' }}>
                     {profession}
                   </option>
                 ))}
@@ -540,182 +661,167 @@ const VoiceInterview = ({ onLogout }) => {
                 disabled={!selectedProfession}
                 style={{
                   width: '100%',
-                  padding: '1rem 2rem',
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  backgroundColor: selectedProfession ? '#06b6d4' : '#6b7280',
-                  color: 'white',
+                  padding: '1.25rem',
+                  fontSize: '1.125rem',
+                  fontWeight: '700',
+                  backgroundColor: selectedProfession ? '#00c6ff' : 'rgba(255, 255, 255, 0.05)',
+                  color: selectedProfession ? '#fff' : '#64748b',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '14px',
                   cursor: selectedProfession ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  boxShadow: selectedProfession ? '0 10px 20px rgba(0, 198, 255, 0.15)' : 'none'
                 }}
               >
-                Start {selectedProfession} Interview
+                Launch Interview
+                <ArrowRight size={20} />
               </button>
             </div>
           ) : (
             <>
+              {/* Question Card */}
+              <div style={{
+                width: '100%',
+                background: 'rgba(255, 255, 255, 0.02)',
+                borderRadius: '30px',
+                padding: '4rem',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                marginBottom: '4rem',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '2rem',
+                  left: '2rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  color: '#00c6ff',
+                  textTransform: 'uppercase',
+                  letterSpacing: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#00c6ff' }} />
+                  AI Question
+                </div>
+
+                <h2 style={{
+                  fontSize: '2.2rem',
+                  fontWeight: '500',
+                  lineHeight: '1.5',
+                  color: '#fff',
+                  textAlign: 'center',
+                  minHeight: '150px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {currentQuestion || `Preparing your ${selectedProfession} interview. Stand by...`}
+                </h2>
+              </div>
+
+              {/* Dynamic Audio Bar Visualization */}
               <div style={{
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-end',
                 justifyContent: 'center',
-                gap: '0.5rem',
-                marginBottom: '3rem',
-                height: '80px'
+                gap: '8px',
+                height: '100px',
+                marginBottom: '3rem'
               }}>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((bar) => {
-                  const baseHeight = 15;
-                  const maxHeight = 60;
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((bar) => {
+                  const baseHeight = 10;
+                  const maxHeight = 80;
                   let currentHeight = baseHeight;
                   
                   if (isAISpeaking || isProcessing) {
-                    currentHeight = baseHeight + Math.abs(Math.sin((Date.now() / 150) + bar * 0.5)) * (maxHeight - baseHeight);
+                    currentHeight = baseHeight + Math.abs(Math.sin((Date.now() / 150) + bar * 0.4)) * (maxHeight - baseHeight);
                   } else if (isListening) {
-                    currentHeight = baseHeight + Math.abs(Math.sin((Date.now() / 100) + bar * 0.3)) * ((maxHeight - baseHeight) * 0.7);
+                    currentHeight = baseHeight + Math.abs(Math.sin((Date.now() / 100) + bar * 0.6)) * ((maxHeight - baseHeight) * 0.8);
                   }
                   
                   return (
                     <div
                       key={bar}
                       style={{
-                        width: '8px',
+                        width: '6px',
                         height: `${currentHeight}px`,
-                        backgroundColor: isListening ? '#ef4444' : 
-                                       (isAISpeaking || isProcessing) ? '#06b6d4' : 'rgba(255, 255, 255, 0.4)',
-                        borderRadius: '4px',
-                        transition: 'height 0.1s ease, background-color 0.3s ease',
-                        boxShadow: (isAISpeaking || isListening) ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none'
+                        backgroundColor: isListening ? '#ff4b4b' : 
+                                       (isAISpeaking || isProcessing) ? '#00c6ff' : 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '20px',
+                        transition: 'height 0.1s ease',
+                        boxShadow: (isAISpeaking || isListening) ? `0 0 20px ${isAISpeaking ? 'rgba(0, 198, 255, 0.3)' : 'rgba(255, 75, 75, 0.3)'}` : 'none'
                       }}
                     />
                   );
                 })}
               </div>
 
+              {/* Interaction Instruction */}
               <div style={{
-                marginBottom: '2rem',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  fontSize: '1.1rem',
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  marginBottom: '0.5rem'
-                }}>
-                  {isProcessing ? 'AI is thinking...' :
-                   isAISpeaking ? 'AI is speaking...' :
-                   isListening ? 'Listening to your response...' :
-                   'Your turn to speak'}
-                </div>
-                <div style={{
-                  fontSize: '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)'
-                }}>
-                  Question {questionCount} of 6 • {interviewConfig?.topic || 'Software Engineering'} • {interviewConfig?.interviewType || 'Behavioral'} • {interviewConfig?.difficulty || 'Intermediate'}
-                </div>
-              </div>
-
-              <h2 style={{
-                fontSize: '1.8rem',
-                fontWeight: '400',
-                margin: 0,
-                marginBottom: '4rem',
-                maxWidth: '700px',
-                lineHeight: '1.4',
-                color: 'white',
-                minHeight: '100px',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center'
+                gap: '1rem'
               }}>
-                {currentQuestion || `Welcome to your ${selectedProfession} interview. Please wait while I prepare the first question...`}
-              </h2>
+                <div style={{
+                  width: '100px',
+                  height: '100px',
+                  borderRadius: '50%',
+                  background: isListening ? 'rgba(255, 75, 75, 0.1)' : 'rgba(0, 198, 255, 0.05)',
+                  border: `1px solid ${isListening ? '#ff4b4b' : '#00c6ff'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: isListening ? '#ff4b4b' : '#00c6ff',
+                  position: 'relative',
+                  cursor: 'pointer'
+                }}>
+                  {isListening && (
+                    <div style={{
+                      position: 'absolute',
+                      inset: '-10px',
+                      borderRadius: '50%',
+                      border: '1px solid rgba(255, 75, 75, 0.3)',
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }} />
+                  )}
+                  <Mic size={32} />
+                </div>
+                <p style={{ 
+                  color: isListening ? '#ff4b4b' : '#94a3b8', 
+                  fontSize: '0.95rem', 
+                  fontWeight: '500',
+                  letterSpacing: '0.5px'
+                }}>
+                  {isListening ? 'LISTENING TO YOU' : isAISpeaking ? 'AI IS SPEAKING' : 'WAITING TO START'}
+                </p>
+              </div>
             </>
           )}
         </div>
-
-        {interviewStarted && (
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            padding: '2rem',
-            borderRadius: '24px 24px 0 0',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '1rem'
-          }}>
-            <button
-              onClick={handleMicClick}
-              onMouseDown={handleMicMouseDown}
-              onMouseUp={handleMicMouseUp}
-              onMouseLeave={handleMicMouseUp}
-              onTouchStart={handleMicMouseDown}
-              onTouchEnd={handleMicMouseUp}
-              disabled={isAISpeaking || isProcessing}
-              style={{
-                width: '120px',
-                height: '120px',
-                borderRadius: '50%',
-                backgroundColor: isListening ? '#ef4444' : 
-                               (isAISpeaking || isProcessing) ? '#6b7280' : '#06b6d4',
-                border: 'none',
-                cursor: (isAISpeaking || isProcessing) ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2)',
-                transition: 'all 0.3s ease',
-                transform: isListening ? 'scale(1.1)' : 'scale(1)',
-                opacity: (isAISpeaking || isProcessing) ? 0.6 : 1
-              }}
-            >
-              {isListening ? <MicOff size={40} color="white" /> : <Mic size={40} color="white" />}
-            </button>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem'
-            }}>
-              <p style={{
-                color: '#6b7280',
-                fontSize: '1rem',
-                margin: 0,
-                textAlign: 'center'
-              }}>
-                {isProcessing ? 'Processing your response...' :
-                 isAISpeaking ? 'AI is speaking, please wait...' :
-                 isListening ? 'Listening... Tap to stop recording' : 
-                 'Tap the mic to respond'}
-              </p>
-              
-              <button
-                onClick={endInterview}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <StopCircle size={16} />
-                End Interview
-              </button>
-            </div>
-            
-            <audio ref={audioPlayerRef} style={{ display: 'none' }} />
-          </div>
-        )}
       </div>
 
+      <audio ref={audioPlayerRef} onEnded={() => {
+        setIsAISpeaking(false);
+        if (recognitionRef.current) {
+          setIsListening(true);
+          recognitionRef.current.start();
+        }
+      }} />
 
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.3; transform: scale(1.1); }
+        }
+      `}} />
     </div>
   );
 };
