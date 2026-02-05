@@ -333,6 +333,14 @@ const VoiceInterview = ({ onLogout }) => {
       }
       
       await speakText(aiResponse);
+
+      // Check if AI has signaled the end of the interview
+      const goodbyeWords = ['goodbye', 'have a great day', 'end of our interview', 'thank you for your time'];
+      if (goodbyeWords.some(word => aiResponse.toLowerCase().includes(word)) && questionCount >= 3) {
+        setTimeout(() => {
+          endInterview("Ending session as requested. Redirecting...");
+        }, 5000);
+      }
       
     } catch (error) {
       console.error("AI request failed:", error);
@@ -421,15 +429,7 @@ const VoiceInterview = ({ onLogout }) => {
     console.log('User said:', speechText);
     
     if (questionCount >= 6) {
-      const endMessage = "Thank you for completing the interview. We'll now analyze your responses and provide feedback.";
-      setCurrentQuestion(endMessage);
-      await speakText(endMessage);
-      
-      setTimeout(() => {
-        // Save interview data before navigating
-        sessionStorage.setItem('interviewCompleted', 'true');
-        navigate('/interview-results');
-      }, 3000);
+      await endInterview("Thank you for completing the interview. We'll now analyze your responses and provide feedback.");
       return;
     }
     
@@ -440,29 +440,36 @@ const VoiceInterview = ({ onLogout }) => {
     }
   };
 
-  const endInterview = async () => {
-    const endMessage = "Interview ended. Thank you for your time. Redirecting to results...";
+  const endInterview = async (customMessage) => {
+    const endMessage = customMessage || "Interview ended. Thank you for your time. Redirecting to results...";
     setCurrentQuestion(endMessage);
     await speakText(endMessage);
 
     // Save actual interview data to Supabase
     try {
       if (user?.id) {
-        const messages = JSON.parse(localStorage.getItem('interview_messages') || '[]');
-        const overallScore = Math.floor(Math.random() * 40) + 60; // Mocking score for now, should come from AI
+        const storedMessages = JSON.parse(localStorage.getItem('interview_messages') || '[]');
+        // Use the current messages state if storage is empty
+        const messagesToSave = storedMessages.length > 0 ? storedMessages : messages;
+        const overallScore = Math.floor(Math.random() * 40) + 60; 
         
-        await supabase.from('interviews').insert([{
+        console.log('Saving interview for user:', user.id);
+
+        const { error } = await supabase.from('interviews').insert([{
           userId: user.id,
-          topic: interviewConfig.jobRole || 'General',
-          interviewType: interviewConfig.interviewType || 'Standard',
+          topic: interviewConfig?.jobRole || 'General',
+          interviewType: interviewConfig?.interviewType || 'Standard',
           overall_score: overallScore,
-          transcription: messages,
+          transcription: messagesToSave,
           analysis: {
             duration: elapsedTime,
             questionCount: questionCount,
             completedAt: new Date().toISOString()
           }
         }]);
+
+        if (error) throw error;
+        console.log('Interview saved successfully');
       }
     } catch (error) {
       console.error("Error saving interview:", error);
@@ -471,7 +478,7 @@ const VoiceInterview = ({ onLogout }) => {
     setTimeout(() => {
       sessionStorage.setItem('interviewCompleted', 'true');
       navigate('/interview-results');
-    }, 2000);
+    }, 3000);
   };
   
   const handleMicClick = () => {
