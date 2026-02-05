@@ -44,36 +44,7 @@ const Login = ({ onForgotPassword, onSignUp }) => {
       padding: 0,
       overflow: 'hidden'
     }}>
-      {/* Left side - Background Image, nindot kaayo */}
-      <div style={{
-        width: '50%',
-        height: '100vh',
-        position: 'relative',
-        overflow: 'hidden',
-        display: 'block',
-        margin: 0,
-        padding: 0
-      }}>
-        <img
-          src="https://images.pexels.com/photos/3874038/pexels-photo-3874038.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-          alt="Two people having a conversation"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover'
-          }}
-        />
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.2)'
-        }}></div>
-      </div>
-
-      {/* Right side - Login Form, diri ang form bai */}
+      {/* Left side - Login Form, diri ang form bai */}
       <div style={{
         width: '50%',
         height: '100vh',
@@ -321,6 +292,35 @@ const Login = ({ onForgotPassword, onSignUp }) => {
             </div>
           </form>
         </div>
+      </div>
+
+      {/* Right side - Background Image, nindot kaayo */}
+      <div style={{
+        width: '50%',
+        height: '100vh',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'block',
+        margin: 0,
+        padding: 0
+      }}>
+        <img
+          src="https://images.pexels.com/photos/5439152/pexels-photo-5439152.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+          alt="Professional job interview"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+        />
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.1)'
+        }}></div>
       </div>
     </div>
   );
