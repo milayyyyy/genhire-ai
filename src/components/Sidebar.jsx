@@ -62,15 +62,15 @@ const Sidebar = () => {
 
       {/* Sidebar Header */}
       <div style={{
-        padding: '2rem 1.5rem',
+        padding: '2.5rem 1.5rem',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.75rem',
+        gap: '0.9rem',
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
-        <ChatBubbleLogo size={32} />
+        <ChatBubbleLogo size={42} />
         <h2 style={{
-          fontSize: '1.25rem',
+          fontSize: '1.6rem',
           fontWeight: '800',
           margin: 0,
           background: 'linear-gradient(to right, #fff, #00c6ff, #fff)',
