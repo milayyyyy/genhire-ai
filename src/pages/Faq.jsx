@@ -146,18 +146,68 @@ const Faq = ({ onLogout }) => {
       overflow: 'hidden',
       position: 'relative'
     }}>
+      <style>{`
+        .faq-content-container {
+          padding: 3rem;
+        }
+        @media (max-width: 1024px) {
+          .faq-content-container {
+            padding: 2rem !important;
+            margin-top: 60px !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .faq-header h1 {
+            font-size: 2.25rem !important;
+          }
+          .faq-header p {
+            font-size: 1rem !important;
+          }
+          .faq-cta {
+            padding: 2rem !important;
+          }
+          .faq-question-btn {
+            padding: 1.25rem 1.5rem !important;
+          }
+          .faq-question-btn span {
+            font-size: 1rem !important;
+          }
+          .faq-answer-box {
+            padding: 0 1.5rem 1.5rem 1.5rem !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .faq-content-container {
+            padding: 1.5rem 1rem !important;
+          }
+          .faq-header h1 {
+            font-size: 1.75rem !important;
+          }
+          .faq-header {
+            margin-bottom: 2.5rem !important;
+          }
+          .faq-cta {
+            padding: 1.5rem !important;
+          }
+          .faq-cta h2 {
+            font-size: 1.25rem !important;
+          }
+        }
+      `}</style>
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }} />
 
-      <div style={{
-        flex: 1,
-        height: '100vh',
-        overflow: 'auto',
-        position: 'relative',
-        zIndex: 1,
-        padding: '3rem'
-      }}>
+      <div 
+        className="faq-content-container"
+        style={{
+          flex: 1,
+          height: '100vh',
+          overflow: 'auto',
+          position: 'relative',
+          zIndex: 1
+        }}
+      >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <header style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <header className="faq-header" style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <div style={{ 
                 display: 'inline-flex', 
                 padding: '0.5rem 1rem', 
@@ -195,6 +245,7 @@ const Faq = ({ onLogout }) => {
               >
                 <button
                   onClick={() => toggleFAQ(index)}
+                  className="faq-question-btn"
                   style={{
                     width: '100%',
                     padding: '1.5rem 2rem',
@@ -224,10 +275,13 @@ const Faq = ({ onLogout }) => {
                 </button>
 
                 {expandedIndex === index && (
-                  <div style={{
-                    padding: '0 2rem 2rem 2rem',
-                    backgroundColor: 'rgba(0, 198, 255, 0.05)'
-                  }}>
+                  <div 
+                    className="faq-answer-box"
+                    style={{
+                      padding: '0 2rem 2rem 2rem',
+                      backgroundColor: 'rgba(0, 198, 255, 0.05)'
+                    }}
+                  >
                     <p style={{
                       fontSize: '1rem',
                       color: '#94a3b8',
@@ -242,14 +296,17 @@ const Faq = ({ onLogout }) => {
             ))}
           </div>
 
-          <div style={{
-            marginTop: '4rem',
-            background: 'linear-gradient(135deg, rgba(0, 198, 255, 0.1) 0%, rgba(0, 114, 255, 0.1) 100%)',
-            border: '1px solid rgba(0, 198, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '3rem',
-            textAlign: 'center'
-          }}>
+          <div 
+            className="faq-cta"
+            style={{
+              marginTop: '4rem',
+              background: 'linear-gradient(135deg, rgba(0, 198, 255, 0.1) 0%, rgba(0, 114, 255, 0.1) 100%)',
+              border: '1px solid rgba(0, 198, 255, 0.2)',
+              borderRadius: '24px',
+              padding: '3rem',
+              textAlign: 'center'
+            }}
+          >
             <MessageCircle size={40} color="#00c6ff" style={{ marginBottom: '1.5rem' }} />
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Still have questions?</h2>
             <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>

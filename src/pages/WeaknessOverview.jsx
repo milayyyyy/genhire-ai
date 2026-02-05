@@ -238,6 +238,53 @@ const WeaknessOverview = ({ onLogout }) => {
       overflow: 'hidden',
       position: 'relative'
     }}>
+      <style>{`
+        .wo-content-container {
+          padding: 2.5rem;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        @media (max-width: 1024px) {
+          .wo-content-container {
+            padding: 1.5rem !important;
+            margin-top: 20px !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .wo-sticky-header {
+            padding: 1rem 1.5rem !important;
+          }
+          .wo-header-actions {
+            gap: 1rem !important;
+          }
+          .wo-hero-section {
+            flex-direction: column !important;
+            padding: 2rem !important;
+            gap: 2rem !important;
+            text-align: center;
+          }
+          .wo-hero-stats {
+            width: 100% !important;
+          }
+          .wo-grid {
+             grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .wo-content-container {
+            padding: 1rem !important;
+          }
+          .wo-sticky-header h1 {
+            font-size: 1.25rem !important;
+          }
+          .wo-sticky-header p {
+            display: none;
+          }
+          .wo-hero-section h2 {
+            font-size: 1.5rem !important;
+          }
+        }
+      `}</style>
       {/* Dynamic Background Canvas */}
       <canvas
         ref={canvasRef}
@@ -262,23 +309,26 @@ const WeaknessOverview = ({ onLogout }) => {
         zIndex: 1
       }}>
         {/* Header */}
-        <header style={{
-          position: 'sticky',
-          top: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(15px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-          padding: '1.25rem 2.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          zIndex: 50
-        }}>
+        <header 
+          className="wo-sticky-header"
+          style={{
+            position: 'sticky',
+            top: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(15px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+            padding: '1.25rem 2.5rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            zIndex: 50
+          }}
+        >
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>Performance Analysis</h1>
             <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Discover growth opportunities from your recent interviews</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div className="wo-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <div style={{ position: 'relative', cursor: 'pointer' }}>
               <Bell size={20} color="#94a3b8" />
               <span style={{
@@ -307,18 +357,21 @@ const WeaknessOverview = ({ onLogout }) => {
           </div>
         </header>
 
-        <div style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="wo-content-container">
           {/* Hero Section */}
-          <div style={{ 
-            display: 'flex', 
-            gap: '3rem', 
-            marginBottom: '3rem',
-            background: 'rgba(15, 15, 15, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            borderRadius: '32px',
-            padding: '3rem',
-            alignItems: 'center'
-          }}>
+          <div 
+            className="wo-hero-section"
+            style={{ 
+              display: 'flex', 
+              gap: '3rem', 
+              marginBottom: '3rem',
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '32px',
+              padding: '3rem',
+              alignItems: 'center'
+            }}
+          >
             <div style={{ flex: 1 }}>
               <div style={{ 
                 display: 'inline-flex', 
@@ -364,7 +417,7 @@ const WeaknessOverview = ({ onLogout }) => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2.5rem' }}>
+          <div className="wo-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2.5rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
               {/* Key Weaknesses */}
               <div style={{

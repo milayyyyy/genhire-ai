@@ -329,6 +329,74 @@ const QuestionBank = ({ onLogout }) => {
       overflow: 'hidden',
       position: 'relative'
     }}>
+      <style>{`
+        .qb-content-container {
+          padding: 2.5rem !important;
+        }
+        @media (max-width: 1024px) {
+          .qb-content-container {
+            padding: 1.5rem !important;
+            margin-top: 20px !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .qb-search-row {
+            flex-direction: column;
+            gap: 1rem !important;
+            padding: 1.25rem !important;
+            border-radius: 20px !important;
+          }
+          .qb-stats-box {
+            width: 100%;
+          }
+          .qb-stats-box > div {
+            width: 100%;
+            justify-content: center;
+            padding: 0.75rem !important;
+          }
+          .category-header-row {
+            padding: 1.25rem !important;
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1.25rem !important;
+          }
+          .category-meta {
+            width: 100%;
+            justify-content: space-between !important;
+            gap: 1rem !important;
+          }
+          .category-count-badge {
+            flex: 1;
+            text-align: center;
+          }
+        }
+        @media (max-width: 480px) {
+          .qb-content-container {
+            padding: 1rem !important;
+          }
+          .category-header-row {
+            padding: 1.25rem 1rem !important;
+          }
+          .category-header-row h3 {
+            font-size: 1.125rem !important;
+          }
+          .category-header-row p {
+            font-size: 0.85rem !important;
+          }
+          .qb-header-content h1 {
+            font-size: 1.25rem !important;
+          }
+          .qb-header-content p {
+            font-size: 0.75rem !important;
+          }
+          .qb-sticky-header {
+            padding: 1rem 1.5rem !important;
+          }
+          .qb-header-actions {
+            gap: 1rem !important;
+          }
+        }
+      `}</style>
       {/* Dynamic Background Canvas */}
       <canvas
         ref={canvasRef}
@@ -353,23 +421,26 @@ const QuestionBank = ({ onLogout }) => {
         zIndex: 1
       }}>
         {/* Sticky Header */}
-        <header style={{
-          position: 'sticky',
-          top: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(15px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-          padding: '1.25rem 2.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          zIndex: 50
-        }}>
-          <div>
+        <header 
+          className="qb-sticky-header"
+          style={{
+            position: 'sticky',
+            top: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(15px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+            padding: '1.25rem 2.5rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            zIndex: 50
+          }}
+        >
+          <div className="qb-header-content">
             <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>Question Bank</h1>
             <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Sharpen your skills with curated interview prep</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div className="qb-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <div style={{ position: 'relative', cursor: 'pointer' }}>
               <Bell size={20} color="#94a3b8" />
               <span style={{
@@ -384,6 +455,7 @@ const QuestionBank = ({ onLogout }) => {
               }}></span>
             </div>
             <div 
+              className="qb-profile-avatar"
               style={{
                 width: '40px',
                 height: '40px',
@@ -402,17 +474,20 @@ const QuestionBank = ({ onLogout }) => {
           </div>
         </header>
 
-        <div style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="qb-content-container" style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
           {/* Search & Statistics */}
-          <div style={{ 
-            display: 'flex', 
-            gap: '1.5rem', 
-            marginBottom: '3rem',
-            background: 'rgba(15, 15, 15, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            borderRadius: '24px',
-            padding: '1.5rem'
-          }}>
+          <div 
+            className="qb-search-row"
+            style={{ 
+              display: 'flex', 
+              gap: '1.5rem', 
+              marginBottom: '3rem',
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '24px',
+              padding: '1.5rem'
+            }}
+          >
             <div style={{ flex: 1, position: 'relative' }}>
               <Search 
                 size={20} 
@@ -439,7 +514,10 @@ const QuestionBank = ({ onLogout }) => {
                 onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
               />
             </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div 
+              className="qb-stats-box"
+              style={{ display: 'flex', gap: '1rem' }}
+            >
               <div style={{ 
                 padding: '0 1.5rem', 
                 background: 'rgba(0, 198, 255, 0.05)', 
@@ -477,6 +555,7 @@ const QuestionBank = ({ onLogout }) => {
                   }}>
                     <div
                       onClick={() => handleCategoryClick(category.id)}
+                      className="category-header-row"
                       style={{
                         padding: '1.5rem 2rem',
                         display: 'flex',
@@ -499,7 +578,8 @@ const QuestionBank = ({ onLogout }) => {
                           fontSize: '1.75rem',
                           border: `1px solid ${category.color}44`,
                           position: 'relative',
-                          boxShadow: `0 0 15px ${category.color}22`
+                          boxShadow: `0 0 15px ${category.color}22`,
+                          flexShrink: 0
                         }}>
                           {category.icon}
                           {answeredCount > 0 && (
@@ -534,22 +614,31 @@ const QuestionBank = ({ onLogout }) => {
                         </div>
                       </div>
                       
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                      <div 
+                        className="category-meta"
+                        style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}
+                      >
                         <div style={{ textAlign: 'right', display: 'none' }}> {/* Optional stats */}
                           <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Completion</div>
                           <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#00c6ff' }}>{Math.round((answeredCount/category.count)*100)}%</div>
                         </div>
-                        <div style={{
-                          padding: '0.5rem 1rem',
-                          background: 'rgba(255, 255, 255, 0.04)',
-                          borderRadius: '12px',
-                          fontSize: '0.875rem',
-                          color: '#94a3b8',
-                          border: '1px solid rgba(255, 255, 255, 0.05)'
-                        }}>
+                        <div 
+                          className="category-count-badge"
+                          style={{
+                            padding: '0.5rem 1rem',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem',
+                            color: '#94a3b8',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
                           {category.count} Questions
                         </div>
-                        {isExpanded ? <ChevronDown size={22} color="#00c6ff" /> : <ChevronRight size={22} color="#94a3b8" />}
+                        <div className="category-chevron">
+                          {isExpanded ? <ChevronDown size={22} color="#00c6ff" /> : <ChevronRight size={22} color="#94a3b8" />}
+                        </div>
                       </div>
                     </div>
 

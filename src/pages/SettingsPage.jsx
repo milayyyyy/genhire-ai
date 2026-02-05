@@ -257,7 +257,7 @@ const SettingsPage = ({ onLogout }) => {
           </div>
         </header>
 
-        <div style={{ padding: '2.5rem', maxWidth: '900px', margin: '0 auto' }}>
+        <div className="settings-content-container" style={{ padding: '2.5rem', maxWidth: '900px', margin: '0 auto' }}>
           {/* App Appearance */}
           <section style={{ marginBottom: '3rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
@@ -271,7 +271,10 @@ const SettingsPage = ({ onLogout }) => {
               borderRadius: '20px',
               padding: '1.5rem'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div 
+                className="settings-card-row"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
                 <div>
                   <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 0.25rem 0' }}>Dark Mode</h3>
                   <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>High contrast dark theme for better focus</p>
@@ -302,7 +305,10 @@ const SettingsPage = ({ onLogout }) => {
               gap: '1.5rem'
             }}>
               {/* Button-less Response */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div 
+                className="settings-card-row"
+                style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
+              >
                 <div style={{ flex: 1, marginRight: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Hands-free Mode</h3>
@@ -317,7 +323,10 @@ const SettingsPage = ({ onLogout }) => {
               </div>
 
               {/* Text Captions */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div 
+                className="settings-card-row"
+                style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
+              >
                 <div style={{ flex: 1, marginRight: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Hide Text Captions</h3>
@@ -332,7 +341,10 @@ const SettingsPage = ({ onLogout }) => {
               </div>
 
               {/* Auto-Play */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div 
+                className="settings-card-row"
+                style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
+              >
                 <div style={{ flex: 1, marginRight: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Auto-advance Questions</h3>
@@ -351,7 +363,10 @@ const SettingsPage = ({ onLogout }) => {
                 <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#e2e8f0', display: 'block', marginBottom: '1rem' }}>
                   AI Speaking Speed
                 </span>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div 
+                  className="settings-button-group"
+                  style={{ display: 'flex', gap: '0.75rem' }}
+                >
                   {['Slow', 'Normal', 'Fast'].map((speed) => (
                     <button
                       key={speed}
@@ -394,7 +409,10 @@ const SettingsPage = ({ onLogout }) => {
               gap: '1.5rem'
             }}>
               {/* Instant Rating */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div 
+                className="settings-card-row"
+                style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
+              >
                 <div style={{ flex: 1, marginRight: '1.5rem' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 0.25rem 0' }}>Real-time Analysis</h3>
                   <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Show scoring results immediately after each answer</p>
@@ -406,7 +424,10 @@ const SettingsPage = ({ onLogout }) => {
               </div>
 
               {/* Retry Answer */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div 
+                className="settings-card-row"
+                style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
+              >
                 <div style={{ flex: 1, marginRight: '1.5rem' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 0.25rem 0' }}>Answer Revision</h3>
                   <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Allows you to retake an answer before proceeding</p>
@@ -426,7 +447,10 @@ const SettingsPage = ({ onLogout }) => {
               <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Support</h2>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <div 
+              className="settings-grid"
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}
+            >
               {[
                 { label: 'Help Center', icon: HelpCircle, path: '/faq' },
                 { label: 'App Status', icon: Info, status: 'v2.1.0' }
@@ -469,16 +493,19 @@ const SettingsPage = ({ onLogout }) => {
 
           {/* Danger Zone */}
           <section>
-            <div style={{
-              background: 'rgba(220, 38, 38, 0.05)',
-              border: '1px solid rgba(220, 38, 38, 0.2)',
-              borderRadius: '20px',
-              padding: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div>
+            <div 
+              className="settings-danger-zone"
+              style={{
+                background: 'rgba(220, 38, 38, 0.05)',
+                border: '1px solid rgba(220, 38, 38, 0.2)',
+                borderRadius: '20px',
+                padding: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <div style={{ flex: 1, marginRight: '1rem' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#ef4444', margin: '0 0 0.25rem 0' }}>Danger Zone</h3>
                 <p style={{ fontSize: '0.875rem', color: '#b91c1c', margin: 0 }}>Permanently delete your profile and interview data</p>
               </div>
@@ -490,12 +517,39 @@ const SettingsPage = ({ onLogout }) => {
                 color: '#dc2626',
                 fontSize: '0.875rem',
                 fontWeight: '700',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
               }}>
                 Delete Account
               </button>
             </div>
           </section>
+
+          <style>{`
+            @media (max-width: 1024px) {
+              .settings-content-container {
+                padding: 1.5rem !important;
+              }
+            }
+            @media (max-width: 768px) {
+              header {
+                padding: 1rem 1.5rem !important;
+              }
+              .settings-card-row {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 1.25rem !important;
+              }
+              .settings-danger-zone {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 1.5rem !important;
+              }
+              .settings-button-group {
+                flex-direction: column !important;
+              }
+            }
+          `}</style>
         </div>
       </div>
     </div>

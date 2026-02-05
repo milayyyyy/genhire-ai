@@ -17,7 +17,8 @@ import {
   Award,
   ArrowRight,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import ChatBubbleLogo from '../components/ChatBubbleLogo';
 import { analyzeAnswer } from '../services/aiAnalysisService';
@@ -407,19 +408,22 @@ const InterviewResults = ({ onLogout }) => {
           </div>
         </header>
 
-        <div style={{ padding: '2.5rem', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+        <div className="results-content-container" style={{ padding: '2.5rem', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
           {/* Score Overview Card */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: '24px',
-            padding: '3rem 2rem',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            marginBottom: '2.5rem',
-            textAlign: 'center',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
+          <div 
+            className="score-overview-card"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '24px',
+              padding: '3rem 2rem',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              marginBottom: '2.5rem',
+              textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
             <div style={{
               position: 'absolute',
               top: '-100px',
@@ -432,15 +436,18 @@ const InterviewResults = ({ onLogout }) => {
 
             <div style={{ position: 'relative', zIndex: 1 }}>
               <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px' }}>Overall Performance Score</p>
-              <div style={{
-                fontSize: '7rem',
-                fontWeight: '900',
-                background: 'linear-gradient(to bottom, #fff, #94a3b8)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                lineHeight: 1,
-                marginBottom: '1rem'
-              }}>
+              <div 
+                className="score-display"
+                style={{
+                  fontSize: '7rem',
+                  fontWeight: '900',
+                  background: 'linear-gradient(to bottom, #fff, #94a3b8)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  lineHeight: 1,
+                  marginBottom: '1rem'
+                }}
+              >
                 {score}
               </div>
               
@@ -473,14 +480,17 @@ const InterviewResults = ({ onLogout }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2.5rem' }}>
             {/* AI Analysis Card */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              backdropFilter: 'blur(12px)',
-              borderRadius: '24px',
-              padding: '2.5rem',
-              border: '1px solid rgba(0, 198, 255, 0.1)',
-              position: 'relative'
-            }}>
+            <div 
+              className="ai-analysis-card"
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '24px',
+                padding: '2.5rem',
+                border: '1px solid rgba(0, 198, 255, 0.1)',
+                position: 'relative'
+              }}
+            >
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -532,7 +542,10 @@ const InterviewResults = ({ onLogout }) => {
                     border: '1px solid rgba(255, 255, 255, 0.05)',
                     transition: 'all 0.3s ease'
                   }}>
-                    <div style={{ display: 'flex', gap: '1.5rem' }}>
+                    <div 
+                      className="qa-row"
+                      style={{ display: 'flex', gap: '1.5rem' }}
+                    >
                       <div style={{
                         width: '36px',
                         height: '36px',
@@ -608,6 +621,34 @@ const InterviewResults = ({ onLogout }) => {
             </button>
           </div>
         </div>
+
+        <style>{`
+          @media (max-width: 1024px) {
+            .results-content-container {
+              padding: 1.5rem !important;
+            }
+          }
+          @media (max-width: 768px) {
+            header {
+              padding: 1rem 1.5rem !important;
+            }
+            .score-display {
+              font-size: 5rem !important;
+            }
+            .qa-row {
+              flex-direction: column !important;
+              gap: 1rem !important;
+            }
+          }
+          @media (max-width: 480px) {
+            .score-display {
+              font-size: 4rem !important;
+            }
+            .ai-analysis-card {
+              padding: 1.5rem !important;
+            }
+          }
+        `}</style>
       </div>
     </div>
   );

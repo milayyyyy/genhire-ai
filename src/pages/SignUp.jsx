@@ -170,25 +170,41 @@ const SignUp = ({ onBackToLogin, onSignUpSuccess }) => {
           -webkit-text-fill-color: transparent;
           animation: shine 5s linear infinite;
         }
+        @media (max-width: 1024px) {
+          .signup-left-side { width: 100% !important; padding: 1.5rem !important; }
+          .signup-right-side { display: none !important; }
+          .signup-container { flex-direction: column !important; }
+        }
+        @media (max-width: 480px) {
+          .shiny-title { font-size: 2rem !important; }
+          .signup-buttons-row { flex-direction: column-reverse !important; gap: 0.75rem !important; }
+          .signup-buttons-row button { width: 100% !important; }
+        }
       `}} />
 
       {/* Auth Container */}
-      <div style={{
-        width: '100%',
-        height: '100vh',
-        display: 'flex',
-        margin: '0 auto',
-        position: 'relative',
-        zIndex: 10
-      }}>
-        {/* Left side - Sign Up Form */}
-        <div style={{
-          width: '50%',
+      <div 
+        className="signup-container"
+        style={{
+          width: '100%',
+          height: '100vh',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem'
-        }}>
+          margin: '0 auto',
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
+        {/* Left side - Sign Up Form */}
+        <div 
+          className="signup-left-side"
+          style={{
+            width: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem'
+          }}
+        >
           <div style={{
             width: '100%',
             maxWidth: '480px'
@@ -348,7 +364,10 @@ const SignUp = ({ onBackToLogin, onSignUpSuccess }) => {
                 Sign up with Google
               </button>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div 
+                className="signup-buttons-row"
+                style={{ display: 'flex', gap: '1rem' }}
+              >
                 <button
                   type="button"
                   onClick={onBackToLogin}
@@ -393,12 +412,15 @@ const SignUp = ({ onBackToLogin, onSignUpSuccess }) => {
         </div>
 
         {/* Right side - Image */}
-        <div style={{
-          width: '50%',
-          height: '100vh',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
+        <div 
+          className="signup-right-side"
+          style={{
+            width: '50%',
+            height: '100vh',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
           <img 
             src="https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=1600" 
             alt="Interview"

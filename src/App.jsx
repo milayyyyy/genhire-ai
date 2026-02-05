@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
@@ -27,16 +28,72 @@ import Sidebar from './components/Sidebar';
 // Layout component to include Sidebar globally
 const MainLayout = ({ children }) => {
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(window.innerWidth > 1024);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 1024);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 1024;
+      setIsMobile(mobile);
+      if (!mobile) setIsSidebarOpen(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const noSidebarPages = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/email-verification', '/setup-profile'];
   const showSidebar = !noSidebarPages.includes(location.pathname);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000' }}>
-      {showSidebar && <Sidebar />}
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', position: 'relative' }}>
+      {showSidebar && (
+        <>
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+          {isMobile && isSidebarOpen && (
+            <div 
+              onClick={() => setIsSidebarOpen(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 999
+              }}
+            />
+          )}
+          {isMobile && !isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              style={{
+                position: 'fixed',
+                top: '1.25rem',
+                left: '1.25rem',
+                zIndex: 90,
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#fff',
+                padding: '0.6rem',
+                borderRadius: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <Menu size={24} />
+            </button>
+          )}
+        </>
+      )}
       <div style={{ 
         flex: 1, 
-        marginLeft: showSidebar ? '280px' : '0',
-        transition: 'margin-left 0.3s ease'
+        marginLeft: (showSidebar && !isMobile) ? '280px' : '0',
+        transition: 'margin-left 0.3s ease',
+        width: '100%'
       }}>
         {children}
       </div>

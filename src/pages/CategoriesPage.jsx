@@ -208,6 +208,37 @@ const CategoriesPage = () => {
           border-color: #00c6ff;
           box-shadow: 0 10px 30px -10px rgba(0, 198, 255, 0.3);
         }
+        @media (max-width: 1024px) {
+          .categories-header {
+            padding: 4rem 1.5rem 2rem !important;
+            margin-top: 60px !important;
+          }
+          .categories-main {
+            padding: 0 1.5rem 4rem !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .shiny-title {
+            font-size: 2.5rem !important;
+          }
+          .categories-header p {
+            font-size: 1rem !important;
+          }
+          .routes-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .shiny-title {
+            font-size: 2rem !important;
+          }
+          .categories-header {
+            padding: 3rem 1rem 1.5rem !important;
+          }
+          .categories-main {
+            padding: 0 1rem 3rem !important;
+          }
+        }
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -224,13 +255,16 @@ const CategoriesPage = () => {
       `}} />
 
       {/* Header */}
-      <div style={{
-        position: 'relative',
-        zIndex: 10,
-        padding: '4rem 2rem',
-        textAlign: 'center',
-        background: 'linear-gradient(to bottom, rgba(0, 198, 255, 0.05), transparent)'
-      }}>
+      <div 
+        className="categories-header"
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          padding: '4rem 2rem',
+          textAlign: 'center',
+          background: 'linear-gradient(to bottom, rgba(0, 198, 255, 0.05), transparent)'
+        }}
+      >
         <div style={{ 
           maxWidth: '800px', 
           margin: '0 auto',
@@ -261,13 +295,16 @@ const CategoriesPage = () => {
       </div>
 
       {/* Grid Content */}
-      <main style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 2rem 6rem',
-        position: 'relative',
-        zIndex: 10
-      }}>
+      <main 
+        className="categories-main"
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 2rem 6rem',
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         {allRoutes.map((category, idx) => (
           <div key={idx} style={{ marginBottom: '4rem' }}>
             <h2 style={{
@@ -288,11 +325,14 @@ const CategoriesPage = () => {
               {category.category.toUpperCase()}
             </h2>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '1.5rem'
-            }}>
+            <div 
+              className="routes-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: '1.5rem'
+              }}
+            >
               {category.routes.map((route, ridx) => {
                 const Icon = route.icon;
                 return (

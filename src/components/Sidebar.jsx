@@ -8,18 +8,22 @@ import {
   CreditCard, 
   User, 
   Settings,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import ChatBubbleLogo from './ChatBubbleLogo';
 import { useAuth } from '../contexts/AuthContext';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
 
   const handleNavigation = (path) => {
     navigate(path);
+    if (window.innerWidth < 1024) {
+      onClose();
+    }
   };
 
   const handleLogout = async () => {
@@ -50,13 +54,21 @@ const Sidebar = () => {
       display: 'flex',
       flexDirection: 'column',
       position: 'fixed',
-      left: 0,
+      left: isOpen ? 0 : '-280px',
       top: 0,
-      zIndex: 100
+      zIndex: 1000,
+      transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      boxShadow: isOpen ? '20px 0 50px rgba(0, 0, 0, 0.5)' : 'none'
     }}>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shine {
           to { background-position: 200% center; }
+        }
+        @media (max-width: 1024px) {
+          .mobile-close-btn { display: flex !important; }
+        }
+        @media (min-width: 1025px) {
+          .mobile-close-btn { display: none !important; }
         }
       `}} />
 
@@ -65,22 +77,43 @@ const Sidebar = () => {
         padding: '2.5rem 1.5rem',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
         gap: '0.9rem',
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
-        <ChatBubbleLogo size={42} />
-        <h2 style={{
-          fontSize: '1.6rem',
-          fontWeight: '800',
-          margin: 0,
-          background: 'linear-gradient(to right, #fff, #00c6ff, #fff)',
-          backgroundSize: '200% auto',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          animation: 'shine 5s linear infinite'
-        }}>
-          GenHire AI
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+          <ChatBubbleLogo size={42} />
+          <h2 style={{
+            fontSize: '1.6rem',
+            fontWeight: '800',
+            margin: 0,
+            background: 'linear-gradient(to right, #fff, #00c6ff, #fff)',
+            backgroundSize: '200% auto',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            animation: 'shine 5s linear infinite'
+          }}>
+            GenHire AI
+          </h2>
+        </div>
+        
+        <button 
+          className="mobile-close-btn"
+          onClick={onClose}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '0.5rem',
+            padding: '0.5rem',
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'none',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Navigation Items */}

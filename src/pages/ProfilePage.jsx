@@ -286,29 +286,35 @@ const ProfilePage = ({ onLogout }) => {
           </div>
         </header>
 
-        <div style={{ padding: '3rem', maxWidth: '1000px', margin: '0 auto' }}>
+        <div className="profile-content-container" style={{ padding: '3rem', maxWidth: '1000px', margin: '0 auto' }}>
           {/* Profile Hero Section */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '3rem', 
-            marginBottom: '4rem',
-            background: 'rgba(15, 15, 15, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            borderRadius: '32px',
-            padding: '3rem',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
+          <div 
+            className="profile-hero"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '3rem', 
+              marginBottom: '4rem',
+              background: 'rgba(15, 15, 15, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '32px',
+              padding: '3rem',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
             <div style={{ position: 'relative' }}>
-              <div style={{
-                width: '160px',
-                height: '160px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
-                padding: '4px',
-                boxShadow: '0 0 30px rgba(0, 198, 255, 0.3)'
-              }}>
+              <div 
+                className="profile-image-container"
+                style={{
+                  width: '160px',
+                  height: '160px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                  padding: '4px',
+                  boxShadow: '0 0 30px rgba(0, 198, 255, 0.3)'
+                }}
+              >
                 <div style={{
                   width: '100%',
                   height: '100%',
@@ -344,10 +350,16 @@ const ProfilePage = ({ onLogout }) => {
             </div>
 
             <div style={{ flex: 1 }}>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '800', margin: '0 0 0.5rem 0', letterSpacing: '-0.025em' }}>
+              <h2 
+                className="profile-name"
+                style={{ fontSize: '2.5rem', fontWeight: '800', margin: '0 0 0.5rem 0', letterSpacing: '-0.025em' }}
+              >
                 {formData.firstName ? `${formData.firstName} ${formData.lastName}` : 'Candidate Name'}
               </h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', color: '#94a3b8' }}>
+              <div 
+                className="profile-badges"
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', color: '#94a3b8' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Mail size={16} color="#00c6ff" />
                   <span>{formData.email}</span>
@@ -366,14 +378,18 @@ const ProfilePage = ({ onLogout }) => {
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+              <div 
+                className="profile-stats"
+                style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}
+              >
                 <div style={{ 
                   background: 'rgba(255,255,255,0.03)', 
                   padding: '1rem 1.5rem', 
                   borderRadius: '20px', 
                   border: '1px solid rgba(255,255,255,0.05)',
                   textAlign: 'center',
-                  minWidth: '120px'
+                  minWidth: '120px',
+                  flex: 1
                 }}>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#00c6ff' }}>12</div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>In-depth Interviews</div>
@@ -384,7 +400,8 @@ const ProfilePage = ({ onLogout }) => {
                   borderRadius: '20px', 
                   border: '1px solid rgba(255,255,255,0.05)',
                   textAlign: 'center',
-                  minWidth: '120px'
+                  minWidth: '120px',
+                  flex: 1
                 }}>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#00c6ff' }}>78%</div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg. Performance</div>
@@ -394,14 +411,20 @@ const ProfilePage = ({ onLogout }) => {
           </div>
 
           {/* Settings Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2.5rem' }}>
+          <div 
+            className="profile-grid"
+            style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2.5rem' }}
+          >
             {/* Main Information */}
-            <div style={{
-              background: 'rgba(15, 15, 15, 0.5)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '24px',
-              padding: '2.5rem'
-            }}>
+            <div 
+              className="profile-main-info"
+              style={{
+                background: 'rgba(15, 15, 15, 0.5)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '24px',
+                padding: '2.5rem'
+              }}
+            >
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ width: '6px', height: '18px', background: '#00c6ff', borderRadius: '3px' }}></div>
                 Personal Details
@@ -419,7 +442,10 @@ const ProfilePage = ({ onLogout }) => {
               )}
 
               <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div 
+                  className="profile-form-row"
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}
+                >
                   <div>
                     <label style={{ display: 'block', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '500' }}>FIRST NAME</label>
                     <input
@@ -637,6 +663,46 @@ const ProfilePage = ({ onLogout }) => {
         }
         ::-webkit-scrollbar-thumb:hover {
           background: #252525;
+        }
+
+        @media (max-width: 1024px) {
+          .profile-content-container {
+            padding: 1.5rem !important;
+          }
+          .profile-hero {
+            flex-direction: column !important;
+            text-align: center !important;
+            gap: 2rem !important;
+            padding: 2rem !important;
+          }
+          .profile-badges {
+            justify-content: center !important;
+          }
+          .profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          header {
+            padding: 1rem 1.5rem !important;
+          }
+          .profile-name {
+            font-size: 1.75rem !important;
+          }
+          .profile-stats {
+            flex-direction: column !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .profile-form-row {
+            grid-template-columns: 1fr !important;
+          }
+          .profile-image-container {
+            width: 120px !important;
+            height: 120px !important;
+          }
         }
       `}</style>
     </div>

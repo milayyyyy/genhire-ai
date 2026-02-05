@@ -543,15 +543,18 @@ const VoiceInterview = ({ onLogout }) => {
         flexDirection: 'column'
       }}>
         {/* Top bar with stats */}
-        <div style={{
-          padding: '1.5rem 3rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(5px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-        }}>
+        <div 
+          className="top-bar"
+          style={{
+            padding: '1.5rem 3rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(5px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{ padding: '0.5rem', background: 'rgba(0, 198, 255, 0.1)', borderRadius: '8px', color: '#00c6ff' }}>
@@ -599,27 +602,33 @@ const VoiceInterview = ({ onLogout }) => {
           </div>
         </div>
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem 4rem',
-          maxWidth: '1200px',
-          margin: '0 auto',
-          width: '100%'
-        }}>
+        <div 
+          className="main-container"
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem 4rem',
+            maxWidth: '1200px',
+            margin: '0 auto',
+            width: '100%'
+          }}
+        >
           {!interviewStarted ? (
-            <div style={{
-              maxWidth: '500px',
-              width: '100%',
-              background: 'rgba(255, 255, 255, 0.02)',
-              padding: '3rem',
-              borderRadius: '24px',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              textAlign: 'center'
-            }}>
+            <div 
+              className="start-card"
+              style={{
+                maxWidth: '500px',
+                width: '100%',
+                background: 'rgba(255, 255, 255, 0.02)',
+                padding: '3rem',
+                borderRadius: '24px',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                textAlign: 'center'
+              }}
+            >
               <div style={{ 
                 width: '80px', 
                 height: '80px', 
@@ -691,16 +700,19 @@ const VoiceInterview = ({ onLogout }) => {
           ) : (
             <>
               {/* Question Card */}
-              <div style={{
-                width: '100%',
-                background: 'rgba(255, 255, 255, 0.02)',
-                borderRadius: '30px',
-                padding: '4rem',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                marginBottom: '4rem',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
+              <div 
+                className="question-card"
+                style={{
+                  width: '100%',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '30px',
+                  padding: '4rem',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  marginBottom: '4rem',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
                 <div style={{
                   position: 'absolute',
                   top: '2rem',
@@ -718,17 +730,20 @@ const VoiceInterview = ({ onLogout }) => {
                   AI Question
                 </div>
 
-                <h2 style={{
-                  fontSize: '2.2rem',
-                  fontWeight: '500',
-                  lineHeight: '1.5',
-                  color: '#fff',
-                  textAlign: 'center',
-                  minHeight: '150px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+                <h2 
+                  className="question-text"
+                  style={{
+                    fontSize: '2.2rem',
+                    fontWeight: '500',
+                    lineHeight: '1.5',
+                    color: '#fff',
+                    textAlign: 'center',
+                    minHeight: '150px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
                   {currentQuestion || `Preparing your ${selectedProfession} interview. Stand by...`}
                 </h2>
               </div>
@@ -827,6 +842,19 @@ const VoiceInterview = ({ onLogout }) => {
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.3; transform: scale(1.1); }
+        }
+        @media (max-width: 768px) {
+          .top-bar { padding: 1rem !important; }
+          .top-bar > div:first-child { gap: 1rem !important; }
+          .top-bar > div:first-child > div > div:last-child { fontSize: 0.85rem !important; }
+          .question-card { padding: 2.5rem 1.5rem !important; margin-bottom: 2rem !important; border-radius: 20px !important; }
+          .question-text { fontSize: 1.4rem !important; min-height: 100px !important; }
+          .main-container { padding: 1rem !important; }
+          .start-card { padding: 2rem 1.5rem !important; }
+        }
+        @media (max-width: 480px) {
+          .top-bar { flex-direction: column; gap: 1rem; align-items: flex-start; }
+          .top-bar > div:last-child { align-self: flex-end; }
         }
       `}} />
     </div>

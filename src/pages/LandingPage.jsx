@@ -549,6 +549,9 @@ export default function LandingPage() {
           .hero-section {
             justify-content: center;
             padding: 0 5%;
+            height: auto;
+            min-height: 100vh;
+            padding-top: 80px;
             background: linear-gradient(135deg, #1a1a2e 0%, #0a0a0f 100%);
           }
           .hero-content {
@@ -558,13 +561,23 @@ export default function LandingPage() {
             flex-direction: column;
             align-items: center;
           }
-          .hero-title { font-size: 2.8rem; }
-          .hero-subtitle { font-size: 1.1rem; }
+          .hero-title { font-size: 2.5rem; margin-top: 2rem; }
+          .hero-subtitle { font-size: 1rem; margin-bottom: 2rem; }
           .button-row {
             flex-direction: column;
             width: 100%;
+            gap: 1rem;
           }
-          .btn { width: 100%; }
+          .btn { width: 100%; padding: 1rem; }
+          .section-title { font-size: 2rem; }
+          .pricing-grid { 
+            grid-template-columns: 1fr; 
+            padding: 0 1rem;
+          }
+          .pricing-card { 
+            transform: none !important; 
+            margin-bottom: 2rem;
+          }
         }
       `}} />
 

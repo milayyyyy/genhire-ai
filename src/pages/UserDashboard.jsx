@@ -162,6 +162,17 @@ const UserDashboard = ({ onLogout }) => {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @media (max-width: 1024px) {
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .main-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 768px) {
+          .header-hook { padding-left: 5rem !important; }
+          .welcome-text { fontSize: 1.4rem !important; }
+        }
+        @media (max-width: 480px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       {/* Main Content Area */}
@@ -171,32 +182,38 @@ const UserDashboard = ({ onLogout }) => {
         overflow: 'auto',
         position: 'relative',
         zIndex: 1,
-        padding: '0 2rem'
+        padding: '0 1.5rem'
       }}>
         {/* Header Hook */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '2rem 0',
-          position: 'sticky',
-          top: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(10px)',
-          zIndex: 5,
-          margin: '0 -2rem',
-          paddingLeft: '2rem',
-          paddingRight: '2rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.03)'
-        }}>
+        <div 
+          className="header-hook"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '2rem 0',
+            position: 'sticky',
+            top: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 5,
+            margin: '0 -1.5rem',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.03)'
+          }}
+        >
           <div>
-            <h1 style={{
-              fontSize: '1.75rem',
-              fontWeight: '800',
-              margin: 0,
-              letterSpacing: '-0.02em',
-              animation: 'fadeInUp 0.6s ease-out'
-            }}>
+            <h1 
+              className="welcome-text"
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: '800',
+                margin: 0,
+                letterSpacing: '-0.02em',
+                animation: 'fadeInUp 0.6s ease-out'
+              }}
+            >
               Welcome back, <span style={{ color: '#00c6ff' }}>{userProfile?.first_name || 'Innovator'}</span>
             </h1>
           </div>
@@ -244,11 +261,14 @@ const UserDashboard = ({ onLogout }) => {
               <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Performance Stats</h2>
             </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '1.5rem'
-            }}>
+            <div 
+              className="stats-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '1.5rem'
+              }}
+            >
               {[
                 { label: 'Avg Rating', value: stats.avgRating, icon: Star, color: '#facc15' },
                 { label: 'Practice Sessions', value: stats.practiceSessions, icon: Zap, color: '#00c6ff' },
@@ -272,7 +292,10 @@ const UserDashboard = ({ onLogout }) => {
           </section>
 
           {/* Quick Actions & Recent Sessions */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
+          <div 
+            className="main-grid"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}
+          >
             {/* Recent Sessions */}
             <div style={{
               background: 'rgba(255, 255, 255, 0.01)',

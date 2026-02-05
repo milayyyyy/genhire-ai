@@ -136,6 +136,48 @@ const AppInfo = ({ onLogout }) => {
       position: 'relative',
       fontFamily: "'Poppins', sans-serif"
     }}>
+      <style>{`
+        .info-content-container {
+          padding: 3rem;
+        }
+        @media (max-width: 1024px) {
+          .info-content-container {
+            padding: 2rem !important;
+            margin-top: 60px !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .info-header {
+            flex-direction: column !important;
+            padding: 2rem !important;
+            text-align: center;
+            gap: 1.5rem !important;
+          }
+          .info-about-section {
+            flex-direction: column !important;
+            padding: 2rem !important;
+            text-align: center;
+          }
+          .info-spline-container {
+            width: 100% !important;
+            height: 200px !important;
+          }
+          .info-features-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .info-content-container {
+            padding: 1.5rem 1rem !important;
+          }
+          .info-header h1 {
+            font-size: 1.75rem !important;
+          }
+          .info-header p {
+            font-size: 0.9rem !important;
+          }
+        }
+      `}</style>
       <canvas
         ref={canvasRef}
         style={{
@@ -150,24 +192,29 @@ const AppInfo = ({ onLogout }) => {
       />
 
       {/* Main Content */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        zIndex: 5,
-        padding: '3rem'
-      }}>
+      <div 
+        className="info-content-container"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          zIndex: 5
+        }}
+      >
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           {/* Header */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '24px',
-            padding: '3rem',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            marginBottom: '2rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '3rem'
-          }}>
+          <div 
+            className="info-header"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '24px',
+              padding: '3rem',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              marginBottom: '2rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3rem'
+            }}
+          >
             <div style={{
               width: '120px',
               height: '120px',
@@ -176,7 +223,8 @@ const AppInfo = ({ onLogout }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(0, 198, 255, 0.3)'
+              boxShadow: '0 10px 30px rgba(0, 198, 255, 0.3)',
+              flexShrink: 0
             }}>
               <Info size={60} color="white" />
             </div>
@@ -190,16 +238,19 @@ const AppInfo = ({ onLogout }) => {
             </div>
           </div>
 
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '24px',
-            padding: '2.5rem',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            marginBottom: '2rem',
-            display: 'flex',
-            gap: '2.5rem',
-            alignItems: 'center'
-          }}>
+          <div 
+            className="info-about-section"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '24px',
+              padding: '2.5rem',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              marginBottom: '2rem',
+              display: 'flex',
+              gap: '2.5rem',
+              alignItems: 'center'
+            }}
+          >
             <div style={{ flex: 1 }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#00c6ff', marginBottom: '1.5rem' }}>
                 About GenHire AI
@@ -211,16 +262,19 @@ const AppInfo = ({ onLogout }) => {
                 looking to sharpen your skills for a career change, GenHire AI is your personal interview coach available 24/7.
               </p>
             </div>
-            <div style={{
-              width: '250px',
-              height: '250px',
-              borderRadius: '20px',
-              overflow: 'hidden',
-              position: 'relative',
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              flexShrink: 0
-            }}>
+            <div 
+              className="info-spline-container"
+              style={{
+                width: '250px',
+                height: '250px',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                position: 'relative',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                flexShrink: 0
+              }}
+            >
               <iframe
                 src="https://my.spline.design/genkubgreetingrobot-dKSdmkp6P4tsfaGKQgqQXWPd/"
                 style={{ 
@@ -235,7 +289,10 @@ const AppInfo = ({ onLogout }) => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+          <div 
+            className="info-features-grid"
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}
+          >
             <div style={{
               backgroundColor: 'rgba(255, 255, 255, 0.03)',
               borderRadius: '20px',
